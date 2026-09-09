@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -148,7 +149,7 @@ final class ProblemDetailsFactory
         $title ??= (string) config("api.codes.$code.title", Response::$statusTexts[$status] ?? 'Error');
 
         $details = new ProblemDetails(
-            type: $code === 'internal_server_error' ? 'about:blank' : $this->baseUrl.'/'.$code,
+            type: $code === 'internal_server_error' ? 'about:blank' : $this->baseUrl . '/' . $code,
             title: $title,
             status: $status,
             detail: $detail ?? $title,
@@ -159,7 +160,35 @@ final class ProblemDetailsFactory
             extensions: $extensions,
         );
 
+        if ($status < 500) {
+            $this->logProblem($details, $request);
+        }
+
         return $details->toResponse()->withHeaders($headers);
+    }
+
+    /**
+     * Record client errors (4xx) with their full problem payload so the log
+     * shows the same detail the client received. Server errors (5xx) are left
+     * to the ExceptionReporter, which logs the exception stack trace.
+     *
+     * @param  array<string, mixed>  $errors
+     */
+    private function logProblem(ProblemDetails $details, ?Request $request): void
+    {
+        $request ??= request();
+
+        Log::warning('API problem response', [
+            'code' => $details->code,
+            'status' => $details->status,
+            'title' => $details->title,
+            'detail' => $details->detail,
+            'errors' => $details->errors,
+            'trace_id' => $details->traceId,
+            'method' => $request?->method(),
+            'path' => $request?->path(),
+            'instance' => $details->instance,
+        ]);
     }
 
     private function traceId(): ?string
@@ -196,7 +225,7 @@ final class ProblemDetailsFactory
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => collect($e->getTrace())
-                    ->map(fn (array $trace) => Arr::except($trace, ['args']))
+                    ->map(fn(array $trace) => Arr::except($trace, ['args']))
                     ->all(),
             ],
         ];
