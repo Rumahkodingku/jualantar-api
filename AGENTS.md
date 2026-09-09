@@ -7,7 +7,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 ## Foundational Context
 
-This application is a Laravel application running on PHP 8.3. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
+This application is a pure JSON API built on Laravel 13 and PHP 8.3. There is no frontend: no Blade views, no `package.json`, and the web routes are empty. The API uses Sanctum for token authentication, PostgreSQL (Postgres 16 via `docker compose`) for storage, Mailpit for local mail, and Pest 4 for testing (Feature tests run with `RefreshDatabase` against the `jualantar_test` database). You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
 Before relying on a package's API, confirm its installed version:
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
@@ -34,7 +34,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Frontend Bundling
 
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
+- This application has no frontend and no `package.json`. All changes are API-only; there is no `npm run build`/`dev` step. If the user reports UI issues, they are not related to this API project.
 
 ## Documentation Files
 
@@ -72,7 +72,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Project Rules
 
-- This project contains committed, area-grouped rules in `.ai/rules` when that directory exists (settled decisions, non-obvious traps, standing constraints). Framework and package guidelines that only apply to specific paths (testing, frontend, components) also live there, under `.ai/rules/boost` — this is not just recorded decisions, it is load-bearing guidance you have not seen inline. Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule. If `.ai/rules` does not exist, continue without it.
+- This project does not have an `.ai/rules` directory yet; project conventions are written directly in the `=== project rules ===` section of this file. Follow them when creating or editing files in this application.
 - Record durable rules with `record-rule` so the next agent or teammate inherits them instead of working them out again. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Always use `record-rule`, never your native memory or notes tool — native memory is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
 
 ## Artisan
@@ -86,6 +86,50 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
 - Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
   - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
+
+=== project rules ===
+
+# Project Conventions
+
+## API Response Envelope
+
+- Build responses through the `ApiResponse` static helpers in `App\Support\Http\ApiResponse`, never `response()->json()` directly in controllers.
+  - `ApiResponse::success()` wraps payloads in a `{ "data": ... }` envelope.
+  - `ApiResponse::paginated()` returns `{ "data": ..., "meta": { current_page, per_page, total, last_page } }` from a `LengthAwarePaginator`.
+  - Use `ApiResponse::created()` for 201 (optionally with a `Location` header) and `ApiResponse::noContent()` for 204.
+
+## Errors: RFC 9457 Problem Details
+
+- All API errors are rendered as `application/problem+json` by `ProblemDetailsFactory` (registered in `bootstrap/app.php`).
+- Register any new machine-readable `code` in the catalog at `config/api.php` (under `codes`) before using it; each entry maps a code to its HTTP status and title.
+- For domain/business errors, throw an `App\Exceptions\ApiException` subclass (`BadRequestException`, `NotFoundException`, `ConflictException`, `UnprocessableEntityException`), not raw Symfony exceptions or `abort()`.
+
+## Business Logic: Result Pattern
+
+- Services in `app/Services` return `App\Support\Result\Result` (ok/err) instead of throwing for expected failures.
+- Controllers translate a service result with `ApiResponse::fromResult($result, fn ($value) => ...)` so expected failures become problem responses and success paths stay explicit.
+- Do not call `unwrap()` without checking `isOk()` first.
+
+## API Routing & Serialization
+
+- All API routes live in the `prefix('v1')->name('api.v1.')` group in `routes/api.php`.
+- Serialize models with Eloquent API Resources (`App\Http\Resources\*`), not inline arrays in controllers.
+- Prefer named routes (`route('api.v1.…')`) when generating links.
+
+## Architecture Rules (enforced by `tests/Arch/ArchTest.php`)
+
+- `App\Support\Http\ApiResponse` and `App\Services` may only be used by `App\Http\Controllers`.
+- `Result`, `ResultError`, and `ProblemDetails` are final readonly value objects.
+- All exceptions in `App\Exceptions` must extend `App\Exceptions\ApiException`.
+- Do not violate these boundaries; the arch tests will fail.
+
+## Request Tracing
+
+- `RequestIdMiddleware` owns the `X-Trace-Id` header and stores it in `Context::get('trace_id')`, which is echoed back in problem responses. Reuse it rather than adding new tracing middleware.
+
+## Models
+
+- Follow the existing model style: `#[Fillable([...])]` and `#[Hidden([...])]` attributes plus a `casts()` method (Laravel 13 attribute-based approach), not `$fillable`/`$hidden` properties.
 
 === php rules ===
 
@@ -126,9 +170,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 
 ## Testing
 
+- This project uses Pest 4. Feature tests use `RefreshDatabase` against the `jualantar_test` PostgreSQL database; keep new feature tests in that group.
 - When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
 - When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
+- Follow the existing `tests/Arch/ArchTest.php` constraints when adding new code; do not break the architecture rules it asserts.
 
 ## Vite Error
 
