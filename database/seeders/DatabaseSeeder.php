@@ -10,11 +10,11 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-
     public function run(): void
     {
         // User::factory(10)->create();
 
+        $this->call(BankSeeder::class);
         $this->call(RegionSeeder::class);
 
         User::factory()->create([
