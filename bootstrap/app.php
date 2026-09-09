@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\RequestIdMiddleware;
+use App\Support\Http\ProblemDetailsFactory;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,10 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->api(append: [
+            RequestIdMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
+        );
+
+        $exceptions->render(fn (Throwable $e, Request $request) => app(ProblemDetailsFactory::class)->render($e, $request),
         );
     })->create();
