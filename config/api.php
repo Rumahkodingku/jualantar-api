@@ -52,4 +52,19 @@ return [
         'internal_server_error' => ['status' => 500, 'title' => 'Internal Server Error'],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Observability
+    |--------------------------------------------------------------------------
+    |
+    | Controls the HTTP request logging and metrics foundation. Request IDs,
+    | exception rendering, and problem details are independent of this flag.
+    |
+    */
+
+    'observability' => [
+        'enabled' => env('OBSERVABILITY_ENABLED', true),
+        'metrics_adapter' => env('PROMETHEUS_METRICS_ADAPTER', 'in_memory'),
+    ],
+
 ];

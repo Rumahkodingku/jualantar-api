@@ -7,19 +7,27 @@ FROM composer:2 AS composer
 WORKDIR /app
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-interaction
+RUN --mount=type=cache,target=/root/.composer composer install --no-dev --prefer-dist --optimize-autoloader --no-scripts --no-interaction
 
 COPY . .
 RUN php artisan package:discover --ansi
 
 # ============================================================
-# Stage 2: Runtime (PHP-FPM + Alpine)
+# Stage 2: Runtime (PHP-FPM + Debian)
 # ============================================================
-FROM php:8.3-fpm-alpine AS app
+FROM php:8.3-fpm AS app
 
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-RUN chmod +x /usr/local/bin/install-php-extensions \
-    && install-php-extensions pdo_pgsql pgsql mbstring intl opcache curl xml dom
+# Install the extensions the app needs that are not already bundled in the
+# official PHP image (mbstring/opcache/curl/xml/dom ship preinstalled).
+RUN --mount=type=cache,target=/var/cache/apt \
+    apt-get update && apt-get install -y --no-install-recommends \
+        libpq-dev \
+        libicu-dev \
+    && docker-php-ext-install pdo_pgsql pgsql intl \
+    && pecl install apcu \
+    && docker-php-ext-enable apcu \
+    && printf 'apc.enable_cli=1\n' > /usr/local/etc/php/conf.d/zz-apcu.ini \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www
 

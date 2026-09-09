@@ -17,7 +17,7 @@ class RequestIdMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $traceId = (string) $request->header('X-Trace-Id', (string) Str::uuid());
+        $traceId = $this->resolveTraceId($request);
 
         Context::add('trace_id', $traceId);
 
@@ -26,5 +26,16 @@ class RequestIdMiddleware
         $response->headers->set('X-Trace-Id', $traceId);
 
         return $response;
+    }
+
+    private function resolveTraceId(Request $request): string
+    {
+        $incoming = trim((string) $request->header('X-Trace-Id', ''));
+
+        if ($incoming !== '' && preg_match('/^[A-Za-z0-9_-]{1,64}$/', $incoming) === 1) {
+            return $incoming;
+        }
+
+        return (string) Str::uuid();
     }
 }

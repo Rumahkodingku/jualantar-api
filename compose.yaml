@@ -23,5 +23,41 @@ services:
             - '1025:1025'
             - '8025:8025'
 
+    api:
+        build:
+            context: .
+        environment:
+            APP_ENV: local
+            APP_URL: http://localhost:8000
+            APP_DEBUG: 'true'
+            DB_CONNECTION: pgsql
+            DB_HOST: db
+            DB_PORT: '5432'
+            DB_DATABASE: ${DB_DATABASE:-jualantar}
+            DB_USERNAME: ${DB_USERNAME:-postgres}
+            DB_PASSWORD: ${DB_PASSWORD:-root}
+            RUN_MIGRATION: 'true'
+            PROMETHEUS_METRICS_ADAPTER: apcu
+        ports:
+            - '8000:8000'
+        command: php artisan serve --host=0.0.0.0 --port=8000
+        depends_on:
+            db:
+                condition: service_healthy
+
+    prometheus:
+        image: prom/prometheus:latest
+        restart: unless-stopped
+        ports:
+            - '9090:9090'
+        volumes:
+            - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - prometheus_data:/prometheus
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+        depends_on:
+            - api
+
 volumes:
     pgdata:
+    prometheus_data:

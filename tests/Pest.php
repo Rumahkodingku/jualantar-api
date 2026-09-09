@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Prometheus\CollectorRegistry;
 use Tests\TestCase;
 
 /*
@@ -50,4 +51,34 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/*
+|--------------------------------------------------------------------------
+| Helpers
+|--------------------------------------------------------------------------
+|
+| Read the Prometheus metric value for a specific label set so feature and
+| unit tests can assert collected metrics without parsing text output.
+|
+*/
+
+/**
+ * @param  list<string>  $labelValues
+ */
+function counterValue(CollectorRegistry $registry, string $name, array $labelValues): int
+{
+    foreach ($registry->getMetricFamilySamples() as $family) {
+        if ($family->getName() !== $name) {
+            continue;
+        }
+
+        foreach ($family->getSamples() as $sample) {
+            if ($sample->getLabelValues() === $labelValues) {
+                return (int) $sample->getValue();
+            }
+        }
+    }
+
+    return 0;
 }

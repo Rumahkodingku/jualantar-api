@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Middleware\RequestIdMiddleware;
+use App\Http\Middleware\RequestLoggingMiddleware;
 use App\Support\Http\ProblemDetailsFactory;
+use App\Support\Observability\ExceptionReporter;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,12 +19,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(append: [
             RequestIdMiddleware::class,
+            RequestLoggingMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        $exceptions->report(fn (Throwable $e) => app(ExceptionReporter::class)($e));
 
         $exceptions->render(fn (Throwable $e, Request $request) => app(ProblemDetailsFactory::class)->render($e, $request),
         );
