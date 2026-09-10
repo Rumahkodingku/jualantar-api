@@ -1,0 +1,9 @@
+{
+    "name": "BankDirectory",
+    "description": "Direktori referensi bank untuk kebutuhan rekening tujuan pembayaran.",
+    "classification": "generic",
+    "depends_on": [],
+    "exposes_contracts": [
+        "App\\Modules\\BankDirectory\\Contracts\\BankLookup"
+    ]
+}

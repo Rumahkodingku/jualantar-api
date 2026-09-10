@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Support\Http\ProblemDetailsFactory;
+use App\Shared\Http\ProblemDetailsFactory;
 use Illuminate\Support\ServiceProvider;
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\APC;

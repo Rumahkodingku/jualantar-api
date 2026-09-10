@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\Result\ResultError;
+use App\Shared\Result\ResultError;
 
 it('exposes its code, message, and default status', function () {
     $error = new ResultError(code: 'stock.insufficient', message: 'Not enough stock.');

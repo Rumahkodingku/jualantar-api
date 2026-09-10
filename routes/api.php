@@ -1,15 +1,18 @@
 <?php
 
-use App\Http\Controllers\BankController;
-use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('v1')->name('api.v1.')->group(function () {
-    Route::get('/user', [UserController::class, 'show'])->name('user');
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Each module registers its own versioned API routes from its service
+| provider (see app/Modules/{Module}/Routes/api.php). This file stays as the
+| application-level index for any future cross-cutting API routes.
+|
+*/
 
-    Route::get('/banks', [BankController::class, 'index'])->name('banks.index');
-    Route::post('/banks', [BankController::class, 'store'])->name('banks.store');
-    Route::get('/banks/{bank}', [BankController::class, 'show'])->name('banks.show');
-    Route::match(['put', 'patch'], '/banks/{bank}', [BankController::class, 'update'])->name('banks.update');
-    Route::delete('/banks/{bank}', [BankController::class, 'destroy'])->name('banks.destroy');
+Route::prefix('v1')->name('api.v1.')->group(function () {
+    //
 });

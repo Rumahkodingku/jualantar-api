@@ -1,7 +1,7 @@
 <?php
 
-use App\Support\Http\ProblemDetailsFactory;
-use App\Support\Result\ResultError;
+use App\Shared\Http\ProblemDetailsFactory;
+use App\Shared\Result\ResultError;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;

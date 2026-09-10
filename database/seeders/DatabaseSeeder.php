@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Modules\BankDirectory\Database\Seeders\BankSeeder;
+use App\Modules\Geography\Database\Seeders\RegionSeeder;
+use App\Modules\IdentityAccess\Database\Seeders\TestUserSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,14 +14,8 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        // User::factory(10)->create();
-
         $this->call(BankSeeder::class);
         $this->call(RegionSeeder::class);
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $this->call(TestUserSeeder::class);
     }
 }

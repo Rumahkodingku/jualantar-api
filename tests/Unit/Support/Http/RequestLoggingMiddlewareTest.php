@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Middleware\RequestLoggingMiddleware;
+use App\Shared\Middleware\RequestLoggingMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;

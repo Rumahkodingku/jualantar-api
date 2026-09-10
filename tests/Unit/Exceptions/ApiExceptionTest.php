@@ -1,9 +1,9 @@
 <?php
 
-use App\Exceptions\BadRequestException;
-use App\Exceptions\ConflictException;
-use App\Exceptions\NotFoundException;
-use App\Exceptions\UnprocessableEntityException;
+use App\Shared\Exceptions\BadRequestException;
+use App\Shared\Exceptions\ConflictException;
+use App\Shared\Exceptions\NotFoundException;
+use App\Shared\Exceptions\UnprocessableEntityException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 it('maps a not found exception to 404 with the not_found code', function () {

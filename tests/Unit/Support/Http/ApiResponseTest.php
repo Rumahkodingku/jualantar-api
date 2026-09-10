@@ -1,8 +1,8 @@
 <?php
 
-use App\Support\Http\ApiResponse;
-use App\Support\Result\Result;
-use App\Support\Result\ResultError;
+use App\Shared\Http\ApiResponse;
+use App\Shared\Result\Result;
+use App\Shared\Result\ResultError;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 it('wraps success data in the data key', function () {

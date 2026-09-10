@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Middleware\RequestIdMiddleware;
+use App\Shared\Middleware\RequestIdMiddleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Symfony\Component\HttpFoundation\Response;

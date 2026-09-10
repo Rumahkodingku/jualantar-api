@@ -1,0 +1,7 @@
+{
+    "name": "IdentityAccess",
+    "description": "Autentikasi dan identitas pengguna (User + Sanctum).",
+    "classification": "generic",
+    "depends_on": [],
+    "exposes_contracts": []
+}

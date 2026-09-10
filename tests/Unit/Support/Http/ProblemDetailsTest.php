@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\Http\ProblemDetails;
+use App\Shared\Http\ProblemDetails;
 
 it('serializes the core RFC 9457 fields', function () {
     $problem = new ProblemDetails(

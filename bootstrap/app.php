@@ -1,9 +1,9 @@
 <?php
 
-use App\Http\Middleware\RequestIdMiddleware;
-use App\Http\Middleware\RequestLoggingMiddleware;
-use App\Support\Http\ProblemDetailsFactory;
-use App\Support\Observability\ExceptionReporter;
+use App\Shared\Http\ProblemDetailsFactory;
+use App\Shared\Middleware\RequestIdMiddleware;
+use App\Shared\Middleware\RequestLoggingMiddleware;
+use App\Shared\Observability\ExceptionReporter;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;

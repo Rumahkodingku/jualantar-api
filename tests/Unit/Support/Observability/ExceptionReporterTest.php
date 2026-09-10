@@ -1,7 +1,7 @@
 <?php
 
-use App\Exceptions\NotFoundException;
-use App\Support\Observability\ExceptionReporter;
+use App\Shared\Exceptions\NotFoundException;
+use App\Shared\Observability\ExceptionReporter;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

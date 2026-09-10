@@ -1,7 +1,7 @@
 <?php
 
-use App\Support\Result\Result;
-use App\Support\Result\ResultError;
+use App\Shared\Result\Result;
+use App\Shared\Result\ResultError;
 
 it('creates an ok result with a value', function () {
     $result = Result::ok(['id' => 1]);

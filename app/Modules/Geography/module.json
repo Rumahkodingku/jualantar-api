@@ -1,0 +1,9 @@
+{
+    "name": "Geography",
+    "description": "Data wilayah administratif Indonesia (provinsi sampai desa) sebagai reference data.",
+    "classification": "generic",
+    "depends_on": [],
+    "exposes_contracts": [
+        "App\\Modules\\Geography\\Contracts\\GeographyLookup"
+    ]
+}
