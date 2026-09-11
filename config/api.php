@@ -41,7 +41,9 @@ return [
     'codes' => [
         'bad_request' => ['status' => 400, 'title' => 'Bad Request'],
         'unauthenticated' => ['status' => 401, 'title' => 'Unauthenticated'],
+        'invalid_credentials' => ['status' => 401, 'title' => 'Unauthenticated'],
         'forbidden' => ['status' => 403, 'title' => 'Forbidden'],
+        'email_not_verified' => ['status' => 403, 'title' => 'Forbidden'],
         'privilege_escalation' => ['status' => 403, 'title' => 'Forbidden'],
         'not_found' => ['status' => 404, 'title' => 'Not Found'],
         'method_not_allowed' => ['status' => 405, 'title' => 'Method Not Allowed'],
@@ -56,6 +58,7 @@ return [
         'unprocessable_entity' => ['status' => 422, 'title' => 'Unprocessable Entity'],
         'invalid_role' => ['status' => 422, 'title' => 'Unprocessable Entity'],
         'invalid_permission' => ['status' => 422, 'title' => 'Unprocessable Entity'],
+        'invalid_verification' => ['status' => 403, 'title' => 'Forbidden'],
         'rate_limited' => ['status' => 429, 'title' => 'Too Many Requests'],
         'internal_server_error' => ['status' => 500, 'title' => 'Internal Server Error'],
     ],

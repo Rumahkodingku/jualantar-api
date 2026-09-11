@@ -5,8 +5,12 @@ namespace App\Providers;
 use App\Shared\Http\ProblemDetailsFactory;
 use App\Shared\OpenApi\ProblemDetailsOperationTransformer;
 use Dedoc\Scramble\Scramble;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\APC;
 use Prometheus\Storage\InMemory;
@@ -37,8 +41,21 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::define('viewApiDocs', fn ($user = null): bool => ! app()->isProduction());
 
+        $this->configureRateLimiters();
+
         Scramble::configure()
             ->withOperationTransformers(ProblemDetailsOperationTransformer::class);
+    }
+
+    private function configureRateLimiters(): void
+    {
+        RateLimiter::for('auth.register', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+
+        RateLimiter::for('auth.login', fn (Request $request) => Limit::perMinute(5)
+            ->by(Str::lower((string) $request->input('email')).'|'.$request->ip()));
+
+        RateLimiter::for('auth.verification.resend', fn (Request $request) => Limit::perHour(3)
+            ->by(Str::lower((string) $request->input('email'))));
     }
 
     private function metricsStorage(): InMemory|APC

@@ -1,6 +1,6 @@
 <?php
 
-$modules = ['IdentityAccess', 'Geography', 'BankDirectory'];
+$modules = ['IdentityAccess', 'Customer', 'Geography', 'BankDirectory'];
 
 foreach ($modules as $module) {
     arch("{$module}: Domain hanya dipakai dalam modulnya sendiri")
@@ -17,7 +17,7 @@ arch('Shared Kernel tidak boleh bergantung ke modul bisnis mana pun')
     ->not->toUse('App\Modules');
 
 arch('modul bisnis tidak boleh memakai internal Spatie Permission secara langsung')
-    ->expect(['App\Modules\Geography', 'App\Modules\BankDirectory'])
+    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory'])
     ->not->toUse('Spatie\Permission');
 
 arch('modul lain hanya mengakses IdentityAccess lewat Contracts')
@@ -31,3 +31,7 @@ arch('modul lain tidak menembus Application layer IdentityAccess')
 arch('modul lain tidak menembus Infrastructure layer IdentityAccess')
     ->expect(['App\Modules\Geography', 'App\Modules\BankDirectory'])
     ->not->toUse('App\Modules\IdentityAccess\Infrastructure');
+
+arch('Customer bergantung pada IdentityAccess secara satu arah (tanpa circular dependency)')
+    ->expect('App\Modules\IdentityAccess')
+    ->not->toUse('App\Modules\Customer');

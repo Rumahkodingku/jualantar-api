@@ -28,13 +28,14 @@ it('denies a driver administrative permissions', function () {
 it('resolves authorization through the public contract', function () {
     $driver = User::factory()->driver()->create();
     $authorization = app(Authorization::class);
+    $missingUserId = '00000000-0000-0000-0000-000000000000';
 
     expect($authorization->userHasRole($driver->id, 'driver'))->toBeTrue()
         ->and($authorization->userHasRole($driver->id, 'auditor'))->toBeFalse()
         ->and($authorization->userHasPermission($driver->id, 'deliveries.view'))->toBeTrue()
         ->and($authorization->userHasPermission($driver->id, 'users.delete'))->toBeFalse()
-        ->and($authorization->userHasRole(999999, 'driver'))->toBeFalse()
-        ->and($authorization->userHasPermission(999999, 'deliveries.view'))->toBeFalse();
+        ->and($authorization->userHasRole($missingUserId, 'driver'))->toBeFalse()
+        ->and($authorization->userHasPermission($missingUserId, 'deliveries.view'))->toBeFalse();
 });
 
 it('grants a super-admin every ability through the gate', function () {

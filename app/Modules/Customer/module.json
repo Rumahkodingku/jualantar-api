@@ -1,0 +1,9 @@
+{
+    "name": "Customer",
+    "description": "Profil, registrasi, autentikasi, dan verifikasi email customer.",
+    "classification": "generic",
+    "depends_on": [
+        "IdentityAccess"
+    ],
+    "exposes_contracts": []
+}

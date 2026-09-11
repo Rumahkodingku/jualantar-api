@@ -16,23 +16,25 @@ beforeEach(function () {
 
 it('reports whether a user has a role', function () {
     $user = User::factory()->driver()->create();
+    $missingUserId = '00000000-0000-0000-0000-000000000000';
 
     $authorization = new SpatieAuthorization;
 
     expect($authorization->userHasRole($user->id, 'driver'))->toBeTrue()
         ->and($authorization->userHasRole($user->id, 'auditor'))->toBeFalse()
-        ->and($authorization->userHasRole(999999, 'driver'))->toBeFalse();
+        ->and($authorization->userHasRole($missingUserId, 'driver'))->toBeFalse();
 });
 
 it('reports whether a user has a permission', function () {
     $user = User::factory()->driver()->create();
+    $missingUserId = '00000000-0000-0000-0000-000000000000';
 
     $authorization = new SpatieAuthorization;
 
     expect($authorization->userHasPermission($user->id, 'deliveries.view'))->toBeTrue()
         ->and($authorization->userHasPermission($user->id, 'users.delete'))->toBeFalse()
         ->and($authorization->userHasPermission($user->id, 'does.not.exist'))->toBeFalse()
-        ->and($authorization->userHasPermission(999999, 'deliveries.view'))->toBeFalse();
+        ->and($authorization->userHasPermission($missingUserId, 'deliveries.view'))->toBeFalse();
 });
 
 it('binds the authorization contract to the Spatie implementation', function () {

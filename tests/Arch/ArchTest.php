@@ -14,6 +14,7 @@ arch('api exception subclasses extend the base ApiException')
 
 arch('module domain exceptions extend the base ApiException')
     ->expect([
+        'App\Modules\Customer\Domain\Exceptions',
         'App\Modules\Geography\Domain\Exceptions',
         'App\Modules\BankDirectory\Domain\Exceptions',
     ])
@@ -28,6 +29,7 @@ arch('the API response helper is only used by module controllers')
     ->expect(ApiResponse::class)
     ->toOnlyBeUsedIn([
         'App\Modules\BankDirectory\Http\Controllers',
+        'App\Modules\Customer\Http\Controllers',
         'App\Modules\Geography\Http\Controllers',
         'App\Modules\IdentityAccess\Http\Controllers',
     ]);

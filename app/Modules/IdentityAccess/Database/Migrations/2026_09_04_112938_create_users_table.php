@@ -14,9 +14,10 @@ return new class extends Migration
         $this->ensureSchema('identity_access');
 
         Schema::create('identity_access.users', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('phone', 30)->nullable()->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
