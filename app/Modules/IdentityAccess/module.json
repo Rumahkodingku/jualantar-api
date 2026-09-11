@@ -1,7 +1,9 @@
 {
     "name": "IdentityAccess",
-    "description": "Autentikasi dan identitas pengguna (User + Sanctum).",
+    "description": "Autentikasi, identitas, role, permission, dan authorization pengguna.",
     "classification": "generic",
     "depends_on": [],
-    "exposes_contracts": []
+    "exposes_contracts": [
+        "App\\Modules\\IdentityAccess\\Contracts\\Authorization"
+    ]
 }

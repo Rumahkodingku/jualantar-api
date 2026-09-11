@@ -12,6 +12,6 @@ class UserController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        return ApiResponse::success(new UserResource($request->user()));
+        return ApiResponse::success(new UserResource($request->user()->load('roles')));
     }
 }

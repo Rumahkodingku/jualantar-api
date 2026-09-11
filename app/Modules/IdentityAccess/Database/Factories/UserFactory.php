@@ -42,4 +42,44 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    /**
+     * Assign the `super-admin` role after the user is created.
+     */
+    public function superAdmin(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('super-admin'));
+    }
+
+    /**
+     * Assign the `admin` role after the user is created.
+     */
+    public function admin(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('admin'));
+    }
+
+    /**
+     * Assign the `customer` role after the user is created.
+     */
+    public function customer(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('customer'));
+    }
+
+    /**
+     * Assign the `merchant` role after the user is created.
+     */
+    public function merchant(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('merchant'));
+    }
+
+    /**
+     * Assign the `driver` role after the user is created.
+     */
+    public function driver(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->assignRole('driver'));
+    }
 }

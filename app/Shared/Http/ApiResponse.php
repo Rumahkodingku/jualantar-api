@@ -51,7 +51,7 @@ final class ApiResponse
      * The $ok callback receives the unwrapped value and must return a response,
      * so callers can choose the status (e.g. ApiResponse::created()).
      */
-    public static function fromResult(Result $result, callable $ok, ?Request $request = null): JsonResponse
+    public static function fromResult(Result $result, callable $ok, ?Request $request = null): Response|JsonResponse
     {
         if ($result->isOk()) {
             return $ok($result->unwrap());
