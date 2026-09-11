@@ -2,9 +2,13 @@
 
 namespace App\Modules\BankDirectory\Http\Resources;
 
+use App\Modules\BankDirectory\Domain\Models\Bank;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Bank
+ */
 class BankResource extends JsonResource
 {
     /**

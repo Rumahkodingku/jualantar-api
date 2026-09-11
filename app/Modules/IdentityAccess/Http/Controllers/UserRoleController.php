@@ -9,6 +9,7 @@ use App\Modules\IdentityAccess\Http\Requests\AssignRoleRequest;
 use App\Modules\IdentityAccess\Http\Resources\RoleResource;
 use App\Shared\Http\ApiResponse;
 use App\Shared\Http\Controllers\Controller;
+use Dedoc\Scramble\Attributes\Response as OpenApiResponse;
 use Illuminate\Http\JsonResponse;
 
 class UserRoleController extends Controller
@@ -25,6 +26,7 @@ class UserRoleController extends Controller
         );
     }
 
+    #[OpenApiResponse(200, 'Roles assigned', type: 'array{data: array<\App\Modules\IdentityAccess\Http\Resources\RoleResource>}')]
     public function store(AssignRoleRequest $request, User $user): JsonResponse
     {
         return ApiResponse::fromResult(
@@ -33,6 +35,7 @@ class UserRoleController extends Controller
         );
     }
 
+    #[OpenApiResponse(200, 'Roles removed', type: 'array{data: array<\App\Modules\IdentityAccess\Http\Resources\RoleResource>}')]
     public function destroy(AssignRoleRequest $request, User $user): JsonResponse
     {
         return ApiResponse::fromResult(

@@ -11,6 +11,8 @@ use App\Modules\IdentityAccess\Http\Requests\UpdatePermissionRequest;
 use App\Modules\IdentityAccess\Http\Resources\PermissionResource;
 use App\Shared\Http\ApiResponse;
 use App\Shared\Http\Controllers\Controller;
+use Dedoc\Scramble\Attributes\IgnoreResponse;
+use Dedoc\Scramble\Attributes\Response as OpenApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -46,6 +48,8 @@ class PermissionController extends Controller
         return ApiResponse::success(new PermissionResource($permission->load('roles')));
     }
 
+    #[OpenApiResponse(201, 'Permission created', type: 'array{data: \App\Modules\IdentityAccess\Http\Resources\PermissionResource}')]
+    #[IgnoreResponse(200)]
     public function store(StorePermissionRequest $request): JsonResponse
     {
         return ApiResponse::fromResult(
@@ -57,6 +61,7 @@ class PermissionController extends Controller
         );
     }
 
+    #[OpenApiResponse(200, 'Permission updated', type: 'array{data: \App\Modules\IdentityAccess\Http\Resources\PermissionResource}')]
     public function update(UpdatePermissionRequest $request, Permission $permission): JsonResponse
     {
         return ApiResponse::fromResult(
@@ -65,6 +70,8 @@ class PermissionController extends Controller
         );
     }
 
+    #[OpenApiResponse(204, 'Permission deleted')]
+    #[IgnoreResponse(200)]
     public function destroy(Permission $permission): Response|JsonResponse
     {
         return ApiResponse::fromResult(

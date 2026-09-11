@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Shared\Http\ProblemDetailsFactory;
+use App\Shared\OpenApi\ProblemDetailsOperationTransformer;
+use Dedoc\Scramble\Scramble;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Prometheus\CollectorRegistry;
 use Prometheus\Storage\APC;
@@ -32,7 +35,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::define('viewApiDocs', fn ($user = null): bool => ! app()->isProduction());
+
+        Scramble::configure()
+            ->withOperationTransformers(ProblemDetailsOperationTransformer::class);
     }
 
     private function metricsStorage(): InMemory|APC

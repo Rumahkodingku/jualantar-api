@@ -11,6 +11,8 @@ use App\Modules\BankDirectory\Http\Requests\UpdateBankRequest;
 use App\Modules\BankDirectory\Http\Resources\BankResource;
 use App\Shared\Http\ApiResponse;
 use App\Shared\Http\Controllers\Controller;
+use Dedoc\Scramble\Attributes\IgnoreResponse;
+use Dedoc\Scramble\Attributes\Response as OpenApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -58,22 +60,25 @@ class BankController extends Controller
         return ApiResponse::success(new BankResource($bank));
     }
 
+    #[OpenApiResponse(201, 'Bank created', type: 'array{data: \App\Modules\BankDirectory\Http\Resources\BankResource}')]
+    #[IgnoreResponse(200)]
     public function store(StoreBankRequest $request): JsonResponse
     {
         return ApiResponse::fromResult(
             ($this->storeBankAccount)($request->validated()),
-            fn(Bank $bank) => ApiResponse::created(
+            fn (Bank $bank) => ApiResponse::created(
                 new BankResource($bank),
                 route('api.v1.banks.show', $bank),
             ),
         );
     }
 
+    #[OpenApiResponse(200, 'Bank updated', type: 'array{data: \App\Modules\BankDirectory\Http\Resources\BankResource}')]
     public function update(Bank $bank, UpdateBankRequest $request): JsonResponse
     {
         return ApiResponse::fromResult(
             ($this->updateBankAccount)($bank, $request->validated()),
-            fn(Bank $bank) => ApiResponse::success(new BankResource($bank)),
+            fn (Bank $bank) => ApiResponse::success(new BankResource($bank)),
         );
     }
 
