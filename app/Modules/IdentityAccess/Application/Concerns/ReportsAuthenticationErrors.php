@@ -1,22 +1,12 @@
 <?php
 
-namespace App\Modules\Customer\Application\Concerns;
+namespace App\Modules\IdentityAccess\Application\Concerns;
 
 use App\Shared\Result\Result;
 use App\Shared\Result\ResultError;
 
-trait ReportsAuthErrors
+trait ReportsAuthenticationErrors
 {
-    private function duplicateRegistration(): Result
-    {
-        return Result::err(new ResultError(
-            code: 'validation_error',
-            message: 'An account with the given email, phone, or username already exists.',
-            status: 422,
-            title: 'Validation Failed',
-        ));
-    }
-
     private function invalidVerification(): Result
     {
         return Result::err(new ResultError(

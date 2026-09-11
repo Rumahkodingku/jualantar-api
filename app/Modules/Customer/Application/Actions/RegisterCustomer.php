@@ -2,8 +2,10 @@
 
 namespace App\Modules\Customer\Application\Actions;
 
-use App\Modules\Customer\Application\Concerns\ReportsAuthErrors;
+use App\Modules\Customer\Application\Concerns\ReportsRegistrationErrors;
 use App\Modules\Customer\Domain\Models\Customer;
+use App\Modules\IdentityAccess\Contracts\EmailVerification;
+use App\Modules\IdentityAccess\Contracts\UserProvisioning;
 use App\Modules\IdentityAccess\Domain\Models\User;
 use App\Shared\Result\Result;
 use App\Shared\Support\Phone;
@@ -13,7 +15,12 @@ use Illuminate\Support\Facades\Log;
 
 final class RegisterCustomer
 {
-    use ReportsAuthErrors;
+    use ReportsRegistrationErrors;
+
+    public function __construct(
+        private readonly UserProvisioning $userProvisioning,
+        private readonly EmailVerification $emailVerification,
+    ) {}
 
     /**
      * @param  array{email: string, phone: string, username: string, full_name: string, password: string}  $data
@@ -25,7 +32,7 @@ final class RegisterCustomer
 
         try {
             $user = DB::transaction(function () use ($data, $fullName, $phone): User {
-                $user = User::create([
+                $user = $this->userProvisioning->create([
                     'name' => $fullName,
                     'email' => $data['email'],
                     'phone' => $phone,
@@ -46,7 +53,7 @@ final class RegisterCustomer
             return $this->duplicateRegistration();
         }
 
-        $user->sendEmailVerificationNotification();
+        $this->emailVerification->send($user);
 
         Log::info('registration_success', ['user_id' => $user->id]);
 

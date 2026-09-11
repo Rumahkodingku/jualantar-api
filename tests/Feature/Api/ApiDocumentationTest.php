@@ -23,7 +23,9 @@ it('documents the module routes', function () {
         '/v1/banks/{bank}',
         '/v1/roles',
         '/v1/permissions',
-        '/v1/user',
+        '/v1/auth/login',
+        '/v1/auth/me',
+        '/v1/customers/register',
         '/v1/users/{user}/roles',
     ]);
 });
@@ -47,7 +49,7 @@ it('secures protected routes with bearer auth and keeps public routes unsecured'
     expect($spec['components']['securitySchemes']['http']['scheme'])->toBe('bearer')
         ->and($spec['security'])->toBe([['http' => []]])
         ->and($spec['paths']['/v1/banks']['get']['security'])->toBe([])
-        ->and($spec['paths']['/v1/user']['get'])->not->toHaveKey('security');
+        ->and($spec['paths']['/v1/auth/me']['get'])->not->toHaveKey('security');
 });
 
 it('documents the success envelope for endpoints backed by the result pattern', function () {

@@ -74,7 +74,7 @@ it('exposes the roles and permissions of the current user', function () {
 
     Sanctum::actingAs($admin);
 
-    $this->getJson('/api/v1/user')
+    $this->getJson('/api/v1/auth/me')
         ->assertOk()
         ->assertJsonPath('data.id', $admin->id)
         ->assertJsonFragment(['super-admin'])

@@ -27,7 +27,7 @@ function customerRegistrationPayload(array $overrides = []): array
 }
 
 it('registers a customer, creates the profile, assigns the role and sends verification', function () {
-    $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload())
+    $this->postJson('/api/v1/customers/register', customerRegistrationPayload())
         ->assertCreated()
         ->assertJsonPath('data.email', 'customer@example.com')
         ->assertJsonPath('data.email_verified', false)
@@ -49,7 +49,7 @@ it('registers a customer, creates the profile, assigns the role and sends verifi
 it('rejects a duplicate email', function () {
     User::factory()->create(['email' => 'customer@example.com']);
 
-    $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload())
+    $this->postJson('/api/v1/customers/register', customerRegistrationPayload())
         ->assertStatus(422)
         ->assertJsonPath('code', 'validation_error')
         ->assertJsonPath('errors.email.0', fn ($message) => is_string($message));
@@ -60,7 +60,7 @@ it('rejects a duplicate email', function () {
 it('rejects a duplicate phone after normalization', function () {
     User::factory()->create(['phone' => '+6281234567890']);
 
-    $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload())
+    $this->postJson('/api/v1/customers/register', customerRegistrationPayload())
         ->assertStatus(422)
         ->assertJsonPath('code', 'validation_error');
 });
@@ -68,13 +68,13 @@ it('rejects a duplicate phone after normalization', function () {
 it('rejects a duplicate username', function () {
     Customer::factory()->create(['username' => 'thomas']);
 
-    $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload())
+    $this->postJson('/api/v1/customers/register', customerRegistrationPayload())
         ->assertStatus(422)
         ->assertJsonPath('code', 'validation_error');
 });
 
 it('rejects a weak password', function () {
-    $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload([
+    $this->postJson('/api/v1/customers/register', customerRegistrationPayload([
         'password' => 'short',
         'password_confirmation' => 'short',
     ]))
@@ -84,7 +84,7 @@ it('rejects a weak password', function () {
 });
 
 it('ignores a client supplied role and keeps the customer role', function () {
-    $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload([
+    $this->postJson('/api/v1/customers/register', customerRegistrationPayload([
         'role' => 'super-admin',
         'status' => 'active',
         'email_verified_at' => now()->toIso8601String(),
@@ -108,14 +108,14 @@ it('rolls back the whole registration when the profile cannot be created', funct
 
 it('rate limits customer registration', function () {
     for ($i = 0; $i < 5; $i++) {
-        $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload([
+        $this->postJson('/api/v1/customers/register', customerRegistrationPayload([
             'email' => "customer{$i}@example.com",
             'phone' => "0812345678{$i}",
             'username' => "user{$i}",
         ]))->assertCreated();
     }
 
-    $this->postJson('/api/v1/auth/register/customer', customerRegistrationPayload([
+    $this->postJson('/api/v1/customers/register', customerRegistrationPayload([
         'email' => 'customer99@example.com',
         'phone' => '081234567899',
         'username' => 'user99',

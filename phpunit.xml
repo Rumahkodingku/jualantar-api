@@ -13,6 +13,9 @@
             <directory>tests/Feature</directory>
             <directory>app/Modules/*/Tests/Feature</directory>
         </testsuite>
+        <testsuite name="Arch">
+            <directory>tests/Arch</directory>
+        </testsuite>
     </testsuites>
     <source>
         <include>

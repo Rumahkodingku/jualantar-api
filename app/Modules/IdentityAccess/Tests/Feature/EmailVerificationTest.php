@@ -22,7 +22,7 @@ function emailVerificationUrl(User $user, ?string $hash = null): string
     ]);
 }
 
-it('verifies a customer email through the signed link', function () {
+it('verifies a user email through the signed link', function () {
     $user = User::factory()->unverified()->create();
 
     $this->getJson(emailVerificationUrl($user))->assertNoContent();

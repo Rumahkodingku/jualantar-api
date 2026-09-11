@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Modules\Customer\Application\Actions;
+namespace App\Modules\IdentityAccess\Application\Actions;
 
-use App\Modules\Customer\Application\Concerns\ReportsAuthErrors;
+use App\Modules\IdentityAccess\Application\Concerns\ReportsAuthenticationErrors;
 use App\Modules\IdentityAccess\Domain\Models\User;
 use App\Shared\Result\Result;
 use Illuminate\Support\Facades\Log;
 
 final class VerifyEmail
 {
-    use ReportsAuthErrors;
+    use ReportsAuthenticationErrors;
 
     /**
      * Validate the verification hash for the target user and mark their email

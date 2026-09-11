@@ -1,17 +1,26 @@
 <?php
 
+use App\Modules\IdentityAccess\Http\Controllers\AuthenticationController;
 use App\Modules\IdentityAccess\Http\Controllers\PermissionController;
 use App\Modules\IdentityAccess\Http\Controllers\RoleController;
-use App\Modules\IdentityAccess\Http\Controllers\UserController;
 use App\Modules\IdentityAccess\Http\Controllers\UserRoleController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
-    Route::get('/user', [UserController::class, 'show'])
-        ->middleware('auth:sanctum')
-        ->name('user');
+    Route::post('/auth/login', [AuthenticationController::class, 'login'])
+        ->middleware('throttle:auth.login')
+        ->name('auth.login');
+
+    Route::post('/auth/email/verification-notification', [AuthenticationController::class, 'resendVerification'])
+        ->middleware('throttle:auth.verification.resend')
+        ->name('auth.email.verification.notification');
 
     Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/auth/logout', [AuthenticationController::class, 'logout'])
+            ->name('auth.logout');
+        Route::get('/auth/me', [AuthenticationController::class, 'me'])
+            ->name('auth.me');
+
         Route::get('/roles', [RoleController::class, 'index'])
             ->middleware('permission:roles.view,sanctum')->name('roles.index');
         Route::post('/roles', [RoleController::class, 'store'])
@@ -46,4 +55,9 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
         Route::delete('/users/{user}/roles', [UserRoleController::class, 'destroy'])
             ->middleware('permission:users.update,sanctum')->name('users.roles.destroy');
     });
+});
+
+Route::middleware(['api', 'signed'])->prefix('api/v1')->group(function () {
+    Route::get('/auth/email/verify/{id}/{hash}', [AuthenticationController::class, 'verifyEmail'])
+        ->name('verification.verify');
 });
