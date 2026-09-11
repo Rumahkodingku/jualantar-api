@@ -28,6 +28,7 @@ arch('the API response helper is only used by module controllers')
     ->expect(ApiResponse::class)
     ->toOnlyBeUsedIn([
         'App\Modules\BankDirectory\Http\Controllers',
+        'App\Modules\Geography\Http\Controllers',
         'App\Modules\IdentityAccess\Http\Controllers',
     ]);
 

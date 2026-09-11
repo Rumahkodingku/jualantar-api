@@ -20,7 +20,7 @@ it('reports whether a user has a role', function () {
     $authorization = new SpatieAuthorization;
 
     expect($authorization->userHasRole($user->id, 'driver'))->toBeTrue()
-        ->and($authorization->userHasRole($user->id, 'admin'))->toBeFalse()
+        ->and($authorization->userHasRole($user->id, 'auditor'))->toBeFalse()
         ->and($authorization->userHasRole(999999, 'driver'))->toBeFalse();
 });
 

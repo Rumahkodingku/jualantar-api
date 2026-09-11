@@ -11,7 +11,7 @@ final class EloquentGeographyLookup implements GeographyLookup
 {
     public function villageExists(int $villageId): bool
     {
-        return Village::query()->whereKey($villageId)->exists();
+        return Village::query()->active()->whereKey($villageId)->exists();
     }
 
     public function addressLabel(int $villageId): AddressLabelData

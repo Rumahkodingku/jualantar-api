@@ -30,7 +30,7 @@ it('resolves authorization through the public contract', function () {
     $authorization = app(Authorization::class);
 
     expect($authorization->userHasRole($driver->id, 'driver'))->toBeTrue()
-        ->and($authorization->userHasRole($driver->id, 'admin'))->toBeFalse()
+        ->and($authorization->userHasRole($driver->id, 'auditor'))->toBeFalse()
         ->and($authorization->userHasPermission($driver->id, 'deliveries.view'))->toBeTrue()
         ->and($authorization->userHasPermission($driver->id, 'users.delete'))->toBeFalse()
         ->and($authorization->userHasRole(999999, 'driver'))->toBeFalse()
@@ -53,7 +53,7 @@ it('returns 401 for guests, 403 without permission and 200 with permission', fun
         ->assertStatus(403)
         ->assertJsonPath('code', 'forbidden');
 
-    Sanctum::actingAs(User::factory()->admin()->create());
+    Sanctum::actingAs(User::factory()->superAdmin()->create());
     $this->getJson('/api/v1/roles')->assertOk();
 });
 
@@ -69,14 +69,14 @@ it('does not allow a customer to escalate to super-admin', function () {
 });
 
 it('exposes the roles and permissions of the current user', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->superAdmin()->create();
 
     Sanctum::actingAs($admin);
 
     $this->getJson('/api/v1/user')
         ->assertOk()
         ->assertJsonPath('data.id', $admin->id)
-        ->assertJsonFragment(['admin'])
+        ->assertJsonFragment(['super-admin'])
         ->assertJsonFragment(['users.view'])
         ->assertJsonMissing(['password']);
 });

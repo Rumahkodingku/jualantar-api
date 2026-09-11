@@ -43,26 +43,33 @@ class RbacSeeder extends Seeder
         'orders.update',
         'deliveries.view',
         'deliveries.update',
+        'geography.update',
     ];
 
     /**
      * Permission bundles granted to each initial role.
      *
-     * `super-admin` intentionally has no explicit permissions; it is granted
-     * every ability through the `Gate::before` hook in the service provider.
+     * `super-admin` holds the administrative permissions explicitly, and is
+     * additionally granted every ability through the `Gate::before` hook in
+     * the service provider.
      *
      * @var array<string, list<string>>
      */
     public const ROLE_PERMISSIONS = [
-        'super-admin' => [],
-        'admin' => [
+        'super-admin' => [
             'users.view',
             'users.create',
             'users.update',
+            'users.delete',
             'roles.view',
             'roles.create',
             'roles.update',
+            'roles.delete',
             'permissions.view',
+            'permissions.create',
+            'permissions.update',
+            'permissions.delete',
+            'geography.update',
         ],
         'customer' => [
             'profile.view',

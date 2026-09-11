@@ -31,13 +31,13 @@ it('returns 403 when an authenticated user lacks the permission', function () {
         ->assertJsonPath('code', 'forbidden');
 });
 
-it('lists roles with their permissions for an admin', function () {
-    $admin = User::factory()->admin()->create();
+it('lists roles with their permissions for a super-admin', function () {
+    $admin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($admin);
 
     $this->getJson('/api/v1/roles')
         ->assertOk()
-        ->assertJsonPath('meta.total', 5)
+        ->assertJsonPath('meta.total', 4)
         ->assertJsonStructure([
             'data' => [['id', 'name', 'guard_name', 'permissions', 'created_at', 'updated_at']],
             'meta' => ['current_page', 'per_page', 'total', 'last_page'],
@@ -52,7 +52,7 @@ it('grants a super-admin full access to the role list', function () {
 });
 
 it('filters roles by search term', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($admin);
 
     $this->getJson('/api/v1/roles?search=merchant')
@@ -62,7 +62,7 @@ it('filters roles by search term', function () {
 });
 
 it('shows a single role', function () {
-    $admin = User::factory()->admin()->create();
+    $admin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($admin);
 
     $role = Role::findByName('merchant');
@@ -88,7 +88,7 @@ it('returns a validation problem when creating a duplicate role', function () {
     $superAdmin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($superAdmin);
 
-    $this->postJson('/api/v1/roles', rolePayload(['name' => 'admin']))
+    $this->postJson('/api/v1/roles', rolePayload(['name' => 'driver']))
         ->assertStatus(422)
         ->assertJsonPath('code', 'validation_error')
         ->assertJsonPath('errors.name.0', 'The name has already been taken.');
@@ -180,21 +180,21 @@ it('removes permissions from a role', function () {
     $superAdmin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($superAdmin);
 
-    $role = Role::findByName('admin');
+    $role = Role::findByName('merchant');
 
     $this->deleteJson("/api/v1/roles/{$role->id}/permissions", [
-        'permissions' => ['users.update'],
+        'permissions' => ['products.create'],
     ])
         ->assertOk();
 
-    expect(Role::findByName('admin')->hasPermissionTo('users.update'))->toBeFalse();
+    expect(Role::findByName('merchant')->hasPermissionTo('products.create'))->toBeFalse();
 });
 
 it('returns a validation problem when assigning an unknown permission', function () {
     $superAdmin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($superAdmin);
 
-    $role = Role::findByName('admin');
+    $role = Role::findByName('merchant');
 
     $this->postJson("/api/v1/roles/{$role->id}/permissions", [
         'permissions' => ['nope.nope'],

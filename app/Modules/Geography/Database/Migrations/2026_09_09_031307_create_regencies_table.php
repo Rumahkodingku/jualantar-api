@@ -25,9 +25,11 @@ return new class extends Migration
                 'regency',
                 'city',
             ]);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->index('province_id');
             $table->index('name');
+            $table->index('is_active');
         });
     }
 

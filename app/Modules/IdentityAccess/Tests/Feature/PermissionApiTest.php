@@ -26,8 +26,8 @@ it('returns 403 when an authenticated user lacks the permission', function () {
         ->assertJsonPath('code', 'forbidden');
 });
 
-it('lists permissions for an admin who holds permissions.view', function () {
-    $admin = User::factory()->admin()->create();
+it('lists permissions for a super-admin who holds permissions.view', function () {
+    $admin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($admin);
 
     $this->getJson('/api/v1/permissions')

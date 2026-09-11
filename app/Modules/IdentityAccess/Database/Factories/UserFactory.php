@@ -52,14 +52,6 @@ class UserFactory extends Factory
     }
 
     /**
-     * Assign the `admin` role after the user is created.
-     */
-    public function admin(): static
-    {
-        return $this->afterCreating(fn (User $user) => $user->assignRole('admin'));
-    }
-
-    /**
      * Assign the `customer` role after the user is created.
      */
     public function customer(): static

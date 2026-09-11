@@ -17,8 +17,10 @@ return new class extends Migration
             $table->id();
             $table->string('code', 13)->unique();
             $table->string('name', 100);
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->index('name');
+            $table->index('is_active');
         });
     }
 
