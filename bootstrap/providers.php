@@ -4,6 +4,7 @@ use App\Modules\BankDirectory\BankDirectoryServiceProvider;
 use App\Modules\Customer\CustomerServiceProvider;
 use App\Modules\Geography\GeographyServiceProvider;
 use App\Modules\IdentityAccess\IdentityAccessServiceProvider;
+use App\Modules\Storage\StorageServiceProvider;
 use App\Providers\AppServiceProvider;
 
 return [
@@ -12,4 +13,5 @@ return [
     CustomerServiceProvider::class,
     GeographyServiceProvider::class,
     BankDirectoryServiceProvider::class,
+    StorageServiceProvider::class,
 ];

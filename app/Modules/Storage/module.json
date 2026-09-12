@@ -1,0 +1,9 @@
+{
+    "name": "Storage",
+    "description": "Abstraksi object storage provider-agnostic untuk kebutuhan file/dokumen lintas modul.",
+    "classification": "generic",
+    "depends_on": [],
+    "exposes_contracts": [
+        "App\\Modules\\Storage\\Contracts\\ObjectStorage"
+    ]
+}

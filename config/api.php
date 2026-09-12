@@ -59,8 +59,10 @@ return [
         'invalid_role' => ['status' => 422, 'title' => 'Unprocessable Entity'],
         'invalid_permission' => ['status' => 422, 'title' => 'Unprocessable Entity'],
         'invalid_verification' => ['status' => 403, 'title' => 'Forbidden'],
+        'object_not_found' => ['status' => 404, 'title' => 'Not Found'],
         'rate_limited' => ['status' => 429, 'title' => 'Too Many Requests'],
         'internal_server_error' => ['status' => 500, 'title' => 'Internal Server Error'],
+        'storage_error' => ['status' => 500, 'title' => 'Storage Error'],
     ],
 
     /*

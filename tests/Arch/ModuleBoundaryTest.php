@@ -54,3 +54,28 @@ arch('modul lain tidak menembus Infrastructure layer IdentityAccess')
 arch('IdentityAccess tidak bergantung pada business module (tanpa circular dependency)')
     ->expect('App\Modules\IdentityAccess')
     ->not->toUse('App\Modules\Customer');
+
+arch('Storage: Domain hanya dipakai dalam modulnya sendiri')
+    ->expect('App\Modules\Storage\Domain')
+    ->toOnlyBeUsedIn('App\Modules\Storage');
+
+arch('Storage: Infrastructure hanya dipakai dalam modulnya sendiri')
+    ->expect('App\Modules\Storage\Infrastructure')
+    ->toOnlyBeUsedIn('App\Modules\Storage');
+
+arch('Storage tidak bergantung pada modul bisnis mana pun')
+    ->expect('App\Modules\Storage')
+    ->not->toUse([
+        'App\Modules\Customer',
+        'App\Modules\Geography',
+        'App\Modules\BankDirectory',
+        'App\Modules\IdentityAccess',
+    ]);
+
+arch('modul bisnis hanya boleh mengakses Storage lewat Contracts')
+    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\IdentityAccess'])
+    ->not->toUse([
+        'App\Modules\Storage\Domain',
+        'App\Modules\Storage\Application',
+        'App\Modules\Storage\Infrastructure',
+    ]);

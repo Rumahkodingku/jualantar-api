@@ -60,6 +60,18 @@ return [
             'report' => false,
         ],
 
+        'private' => [
+            'driver' => 's3',
+            'key' => env('STORAGE_ACCESS_KEY_ID'),
+            'secret' => env('STORAGE_SECRET_ACCESS_KEY'),
+            'region' => env('STORAGE_REGION', 'auto'),
+            'bucket' => env('STORAGE_BUCKET'),
+            'endpoint' => env('STORAGE_ENDPOINT'),
+            'use_path_style_endpoint' => env('STORAGE_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => true,
+            'report' => false,
+        ],
+
     ],
 
     /*
