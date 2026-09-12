@@ -9,7 +9,7 @@ interface UserProvisioning
     /**
      * Provision a new identity user.
      *
-     * @param  array{name: string, email: string, phone?: string|null, password: string}  $attributes
+     * @param  array{email: string, phone?: string|null, password: string}  $attributes
      */
     public function create(array $attributes): User;
 }

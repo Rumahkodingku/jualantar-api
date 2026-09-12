@@ -17,7 +17,6 @@ it('returns the authenticated user in the data envelope', function () {
     $this->getJson('/api/v1/auth/me')
         ->assertOk()
         ->assertJsonPath('data.id', $user->id)
-        ->assertJsonPath('data.name', $user->name)
         ->assertJsonPath('data.email', $user->email)
         ->assertJsonMissing(['password']);
 });

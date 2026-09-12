@@ -23,7 +23,7 @@ it('logs in a verified customer and returns a sanctum token', function () {
         ->assertOk()
         ->assertJsonPath('data.token_type', 'Bearer')
         ->assertJsonPath('data.user.email', 'customer@example.com')
-        ->assertJsonStructure(['data' => ['token', 'token_type', 'user' => ['id', 'name', 'email']]]);
+        ->assertJsonStructure(['data' => ['token', 'token_type', 'user' => ['id', 'email']]]);
 
     expect($user->tokens()->count())->toBe(1);
 });

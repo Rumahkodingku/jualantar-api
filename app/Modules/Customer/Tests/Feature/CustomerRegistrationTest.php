@@ -38,8 +38,7 @@ it('registers a customer, creates the profile, assigns the role and sends verifi
     expect($user)->not->toBeNull()
         ->and($user->hasRole('customer'))->toBeTrue()
         ->and($user->email_verified_at)->toBeNull()
-        ->and($user->phone)->toBe('+6281234567890')
-        ->and($user->name)->toBe('Thomas Alberto');
+        ->and($user->phone)->toBe('+6281234567890');
 
     expect(Customer::where('user_id', $user->id)->where('username', 'thomas')->exists())->toBeTrue();
 

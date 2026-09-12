@@ -18,7 +18,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 #[Table('identity_access.users')]
 #[UseFactory(UserFactory::class)]
-#[Fillable(['name', 'email', 'phone', 'password'])]
+#[Fillable(['email', 'phone', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmailContract
 {

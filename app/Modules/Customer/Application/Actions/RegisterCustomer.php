@@ -33,7 +33,6 @@ final class RegisterCustomer
         try {
             $user = DB::transaction(function () use ($data, $fullName, $phone): User {
                 $user = $this->userProvisioning->create([
-                    'name' => $fullName,
                     'email' => $data['email'],
                     'phone' => $phone,
                     'password' => $data['password'],
