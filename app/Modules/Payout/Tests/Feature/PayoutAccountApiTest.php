@@ -1,18 +1,12 @@
 <?php
 
-use App\Modules\BankDirectory\Domain\Models\Bank;
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
 use App\Modules\Payout\Domain\Enums\PayoutOwnerType;
 use App\Modules\Payout\Domain\Enums\PayoutStatus;
 use App\Modules\Payout\Domain\Models\PayoutAccount;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 it('rejects a guest from listing payout accounts', function () {
@@ -22,7 +16,7 @@ it('rejects a guest from listing payout accounts', function () {
 });
 
 it('forbids a user without the payout manage permission', function () {
-    Sanctum::actingAs(User::factory()->customer()->create());
+    $this->actingAsCustomer();
 
     $this->getJson('/api/v1/payout-accounts')
         ->assertStatus(403)
@@ -30,9 +24,9 @@ it('forbids a user without the payout manage permission', function () {
 });
 
 it('lists payout accounts with the resolved bank inside the paginated envelope', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
-    $bank = Bank::factory()->create(['code' => '008', 'name' => 'PT BANK MANDIRI']);
+    $bank = $this->newBank(['code' => '008', 'name' => 'PT BANK MANDIRI']);
     PayoutAccount::factory()->create(['bank_id' => $bank->id]);
     PayoutAccount::factory()->create();
 
@@ -48,10 +42,10 @@ it('lists payout accounts with the resolved bank inside the paginated envelope',
 });
 
 it('filters payout accounts by owner, status, bank and search', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $ownerId = (string) Str::uuid();
-    $bank = Bank::factory()->create();
+    $bank = $this->newBank();
 
     PayoutAccount::factory()
         ->forOwner(PayoutOwnerType::Merchant, $ownerId)
@@ -80,7 +74,7 @@ it('filters payout accounts by owner, status, bank and search', function () {
 });
 
 it('returns a validation problem for invalid index query params', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $this->getJson('/api/v1/payout-accounts?status=bogus')
         ->assertStatus(422)
@@ -93,9 +87,9 @@ it('returns a validation problem for invalid index query params', function () {
 });
 
 it('shows a single payout account with its bank', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
-    $bank = Bank::factory()->create(['code' => '002', 'name' => 'PT BANK RAKYAT INDONESIA']);
+    $bank = $this->newBank(['code' => '002', 'name' => 'PT BANK RAKYAT INDONESIA']);
     $account = PayoutAccount::factory()->create(['bank_id' => $bank->id]);
 
     $this->getJson("/api/v1/payout-accounts/{$account->id}")
@@ -106,7 +100,7 @@ it('shows a single payout account with its bank', function () {
 });
 
 it('returns a 404 problem when the payout account does not exist', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $this->getJson('/api/v1/payout-accounts/'.fake()->uuid())
         ->assertStatus(404)

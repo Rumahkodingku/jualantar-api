@@ -4,14 +4,9 @@ use App\Modules\Geography\Domain\Models\District;
 use App\Modules\Geography\Domain\Models\Province;
 use App\Modules\Geography\Domain\Models\Regency;
 use App\Modules\Geography\Domain\Models\Village;
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 it('requires the district_id filter', function () {
@@ -88,8 +83,7 @@ it('returns 401 when a guest toggles a village', function () {
 });
 
 it('lets a super-admin deactivate a village and reactivate it', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $village = Village::factory()->create(['is_active' => true]);
 
@@ -103,8 +97,7 @@ it('lets a super-admin deactivate a village and reactivate it', function () {
 });
 
 it('deactivates a village via delete idempotently', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $village = Village::factory()->create(['is_active' => true]);
 

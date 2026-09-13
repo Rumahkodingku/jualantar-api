@@ -6,6 +6,7 @@
         "BankDirectory"
     ],
     "exposes_contracts": [
-        "App\\Modules\\Payout\\Contracts\\PayoutAccountLookup"
+        "App\\Modules\\Payout\\Contracts\\PayoutAccountLookup",
+        "App\\Modules\\Payout\\Contracts\\PayoutAccountProvisioning"
     ]
 }

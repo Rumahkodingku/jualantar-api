@@ -2,12 +2,12 @@
 
 namespace App\Modules\Customer\Http\Resources;
 
-use App\Modules\IdentityAccess\Domain\Models\User;
+use App\Modules\IdentityAccess\Contracts\DataTransferObjects\UserData;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin User
+ * @mixin UserData
  */
 class RegisteredCustomerResource extends JsonResource
 {
@@ -19,7 +19,7 @@ class RegisteredCustomerResource extends JsonResource
         return [
             'user_id' => $this->id,
             'email' => $this->email,
-            'email_verified' => $this->hasVerifiedEmail(),
+            'email_verified' => $this->emailVerified,
         ];
     }
 }

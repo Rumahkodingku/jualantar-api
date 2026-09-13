@@ -16,7 +16,7 @@ final class ResendVerificationEmail
         $user = User::query()->where('email', $email)->first();
 
         if ($user !== null && ! $user->hasVerifiedEmail()) {
-            $this->emailVerification->send($user);
+            $this->emailVerification->send($user->id);
 
             Log::info('verification_resend', ['user_id' => $user->id]);
         }

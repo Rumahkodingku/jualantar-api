@@ -2,15 +2,11 @@
 
 use App\Modules\Customer\Application\Actions\RegisterCustomer;
 use App\Modules\Customer\Domain\Models\Customer;
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Notification;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
     Notification::fake();
 });
 
@@ -33,7 +29,7 @@ it('registers a customer, creates the profile, assigns the role and sends verifi
         ->assertJsonPath('data.email_verified', false)
         ->assertJsonStructure(['data' => ['user_id', 'email', 'email_verified']]);
 
-    $user = User::where('email', 'customer@example.com')->first();
+    $user = $this->userByEmail('customer@example.com');
 
     expect($user)->not->toBeNull()
         ->and($user->hasRole('customer'))->toBeTrue()
@@ -46,7 +42,7 @@ it('registers a customer, creates the profile, assigns the role and sends verifi
 });
 
 it('rejects a duplicate email', function () {
-    User::factory()->create(['email' => 'customer@example.com']);
+    $this->plainUser(['email' => 'customer@example.com']);
 
     $this->postJson('/api/v1/customers/register', customerRegistrationPayload())
         ->assertStatus(422)
@@ -57,7 +53,7 @@ it('rejects a duplicate email', function () {
 });
 
 it('rejects a duplicate phone after normalization', function () {
-    User::factory()->create(['phone' => '+6281234567890']);
+    $this->plainUser(['phone' => '+6281234567890']);
 
     $this->postJson('/api/v1/customers/register', customerRegistrationPayload())
         ->assertStatus(422)
@@ -89,7 +85,7 @@ it('ignores a client supplied role and keeps the customer role', function () {
         'email_verified_at' => now()->toIso8601String(),
     ]))->assertCreated();
 
-    $user = User::where('email', 'customer@example.com')->first();
+    $user = $this->userByEmail('customer@example.com');
 
     expect($user->getRoleNames()->all())->toBe(['customer'])
         ->and($user->email_verified_at)->toBeNull();
@@ -101,7 +97,7 @@ it('rolls back the whole registration when the profile cannot be created', funct
     $result = app(RegisterCustomer::class)(customerRegistrationPayload());
 
     expect($result->isErr())->toBeTrue()
-        ->and(User::where('email', 'customer@example.com')->exists())->toBeFalse()
+        ->and($this->userByEmail('customer@example.com'))->toBeNull()
         ->and(Customer::where('username', 'thomas')->count())->toBe(1);
 });
 

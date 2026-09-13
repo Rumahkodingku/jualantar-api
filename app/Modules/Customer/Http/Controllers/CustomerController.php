@@ -5,7 +5,7 @@ namespace App\Modules\Customer\Http\Controllers;
 use App\Modules\Customer\Application\Actions\RegisterCustomer;
 use App\Modules\Customer\Http\Requests\RegisterCustomerRequest;
 use App\Modules\Customer\Http\Resources\RegisteredCustomerResource;
-use App\Modules\IdentityAccess\Domain\Models\User;
+use App\Modules\IdentityAccess\Contracts\DataTransferObjects\UserData;
 use App\Shared\Http\ApiResponse;
 use App\Shared\Http\Controllers\Controller;
 use Dedoc\Scramble\Attributes\IgnoreResponse;
@@ -22,7 +22,7 @@ class CustomerController extends Controller
     {
         return ApiResponse::fromResult(
             ($this->registerCustomer)($request->validated()),
-            fn (User $user) => ApiResponse::created(new RegisteredCustomerResource($user)),
+            fn (UserData $user) => ApiResponse::created(new RegisteredCustomerResource($user)),
         );
     }
 }

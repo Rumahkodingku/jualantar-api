@@ -10,5 +10,6 @@ final readonly class ServiceData
         public string $slug,
         public string $description,
         public string $icon,
+        public bool $isActive,
     ) {}
 }

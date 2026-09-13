@@ -2,14 +2,9 @@
 
 use App\Modules\Geography\Domain\Models\Province;
 use App\Modules\Geography\Domain\Models\Regency;
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 it('lists only active regencies and can filter by province', function () {
@@ -79,8 +74,7 @@ it('returns 401 when a guest toggles a regency', function () {
 });
 
 it('lets a super-admin deactivate a regency and reactivate it', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $regency = Regency::factory()->create(['is_active' => true]);
 
@@ -96,8 +90,7 @@ it('lets a super-admin deactivate a regency and reactivate it', function () {
 });
 
 it('deactivates a regency via delete idempotently', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $regency = Regency::factory()->create(['is_active' => true]);
 

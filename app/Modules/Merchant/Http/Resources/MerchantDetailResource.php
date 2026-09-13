@@ -21,7 +21,7 @@ class MerchantDetailResource extends JsonResource
             'business_name' => $this->business_name,
             'slug' => $this->slug,
             'description' => $this->description,
-            'type' => $this->type->value,
+            'type' => $this->type?->value,
             'status' => $this->status->value,
             'logo' => $this->logo,
             'logo_url' => $this->logo_url,

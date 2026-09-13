@@ -22,6 +22,7 @@ final class EloquentServiceLookup implements ServiceLookup
                 slug: $service->slug,
                 description: $service->description,
                 icon: $service->icon,
+                isActive: $service->is_active,
             ))
             ->all();
     }
@@ -40,6 +41,7 @@ final class EloquentServiceLookup implements ServiceLookup
                 slug: $category->slug,
                 description: $category->description,
                 icon: $category->icon,
+                isActive: $category->is_active,
             ))
             ->all();
     }
@@ -64,6 +66,7 @@ final class EloquentServiceLookup implements ServiceLookup
                 slug: $service->slug,
                 description: $service->description,
                 icon: $service->icon,
+                isActive: $service->is_active,
             ))
             ->all();
     }
@@ -89,6 +92,7 @@ final class EloquentServiceLookup implements ServiceLookup
                 slug: $category->slug,
                 description: $category->description,
                 icon: $category->icon,
+                isActive: $category->is_active,
             ))
             ->all();
     }

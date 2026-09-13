@@ -1,11 +1,5 @@
 <?php
 
-use App\Modules\Geography\Domain\Models\District;
-use App\Modules\Geography\Domain\Models\Province;
-use App\Modules\Geography\Domain\Models\Regency;
-use App\Modules\Geography\Domain\Models\Village;
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
 use App\Modules\Merchant\Domain\Enums\MerchantStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantType;
 use App\Modules\Merchant\Domain\Models\LegalEntity;
@@ -13,20 +7,13 @@ use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\MerchantCategory;
 use App\Modules\Merchant\Domain\Models\MerchantDocument;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
-use App\Modules\Payout\Domain\Enums\PayoutOwnerType;
-use App\Modules\Payout\Domain\Models\PayoutAccount;
-use App\Modules\Service\Domain\Models\Service;
-use App\Modules\Service\Domain\Models\ServiceCategory;
 use App\Modules\Storage\Contracts\DataTransferObjects\StoredObject;
 use App\Modules\Storage\Contracts\DataTransferObjects\TemporaryUpload;
 use App\Modules\Storage\Contracts\ObjectStorage;
 use Illuminate\Http\UploadedFile;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 function fakeObjectStorage(): ObjectStorage
@@ -74,7 +61,7 @@ it('rejects a guest from listing merchants', function () {
 });
 
 it('forbids a user without the merchant view permission', function () {
-    Sanctum::actingAs(User::factory()->customer()->create());
+    $this->actingAsCustomer();
 
     $this->getJson('/api/v1/merchants')
         ->assertStatus(403)
@@ -82,10 +69,10 @@ it('forbids a user without the merchant view permission', function () {
 });
 
 it('lists merchants with resolved service and owner inside the paginated envelope', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
-    $service = Service::factory()->create(['name' => 'JAfood']);
-    $owner = User::factory()->create();
+    $service = $this->newService(['name' => 'JAfood']);
+    $owner = $this->plainUser();
 
     Merchant::factory()->forService($service->id)->forUser($owner->id)->create([
         'business_name' => 'Warung Bu Siti',
@@ -109,9 +96,9 @@ it('lists merchants with resolved service and owner inside the paginated envelop
 });
 
 it('filters merchants by status, type and service', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
-    $service = Service::factory()->create();
+    $service = $this->newService();
 
     Merchant::factory()->forService($service->id)->active()->create();
     Merchant::factory()->company()->pending()->create();
@@ -132,7 +119,7 @@ it('filters merchants by status, type and service', function () {
 });
 
 it('returns a validation problem for invalid index query params', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $this->getJson('/api/v1/merchants?status=bogus')
         ->assertStatus(422)
@@ -147,17 +134,17 @@ it('returns a validation problem for invalid index query params', function () {
 it('shows a merchant detail with relations and cross-module data resolved', function () {
     $this->app->bind(ObjectStorage::class, fn () => fakeObjectStorage());
 
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
-    $service = Service::factory()->create(['name' => 'JAfood']);
-    $category = ServiceCategory::factory()->create(['service_id' => $service->id, 'name' => 'Makanan']);
-    $owner = User::factory()->create();
-    $reviewer = User::factory()->create();
+    $service = $this->newService(['name' => 'JAfood']);
+    $category = $this->newServiceCategory(['service_id' => $service->id, 'name' => 'Makanan']);
+    $owner = $this->plainUser();
+    $reviewer = $this->plainUser();
 
-    $province = Province::factory()->create(['name' => 'PROVINSI']);
-    $regency = Regency::factory()->create(['province_id' => $province->id, 'name' => 'KABUPATEN']);
-    $district = District::factory()->create(['regency_id' => $regency->id, 'name' => 'KECAMATAN']);
-    $village = Village::factory()->create(['district_id' => $district->id, 'name' => 'DESA']);
+    $province = $this->newProvince(['name' => 'PROVINSI']);
+    $regency = $this->newRegency(['province_id' => $province->id, 'name' => 'KABUPATEN']);
+    $district = $this->newDistrict(['regency_id' => $regency->id, 'name' => 'KECAMATAN']);
+    $village = $this->newVillage(['district_id' => $district->id, 'name' => 'DESA']);
 
     $legalEntity = LegalEntity::factory()->create(['village_id' => $village->id]);
 
@@ -172,7 +159,7 @@ it('shows a merchant detail with relations and cross-module data resolved', func
     MerchantCategory::factory()->create(['merchant_id' => $merchant->id, 'category_id' => $category->id]);
     MerchantOutlet::factory()->create(['merchant_id' => $merchant->id, 'village_id' => $village->id]);
     MerchantDocument::factory()->create(['merchant_id' => $merchant->id, 'object_key' => 'merchants/'.$merchant->id.'/documents/doc']);
-    PayoutAccount::factory()->forOwner(PayoutOwnerType::Merchant, $merchant->id)->create();
+    $this->newPayoutAccountForMerchant($merchant->id);
 
     $this->getJson("/api/v1/merchants/{$merchant->id}")
         ->assertOk()
@@ -190,7 +177,7 @@ it('shows a merchant detail with relations and cross-module data resolved', func
 });
 
 it('returns a 404 problem when the merchant does not exist', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $this->getJson('/api/v1/merchants/'.fake()->uuid())
         ->assertStatus(404)

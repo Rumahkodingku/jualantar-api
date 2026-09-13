@@ -15,13 +15,15 @@ return new class extends Migration
 
         Schema::create('merchant.merchants', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->uuid('user_id')->nullable();
+            $table->uuid('user_id')->nullable()->unique();
             $table->uuid('legal_entity_id')->nullable();
-            $table->uuid('service_id');
-            $table->string('business_name', 100);
-            $table->string('slug', 100)->unique();
+            // Registration creates an empty draft first; service, business_name,
+            // slug and type are filled in during the wizard and validated at submit.
+            $table->uuid('service_id')->nullable();
+            $table->string('business_name', 100)->nullable();
+            $table->string('slug', 100)->nullable()->unique();
             $table->text('description')->nullable();
-            $table->string('type', 20);
+            $table->string('type', 20)->nullable();
             $table->string('logo', 255)->nullable();
             $table->string('status', 20)->default('draft');
             $table->string('rejection_stage', 50)->nullable();
@@ -35,7 +37,6 @@ return new class extends Migration
                 ->on('merchant.legal_entities')
                 ->nullOnDelete();
 
-            $table->index('user_id');
             $table->index('service_id');
             $table->index('status');
             $table->index('type');

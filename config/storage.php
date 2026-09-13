@@ -29,4 +29,24 @@ return [
         'ttl' => (int) env('STORAGE_TEMPORARY_URL_TTL', 300),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Presigned Uploads
+    |--------------------------------------------------------------------------
+    |
+    | Validation bounds applied by consumers (e.g. merchant registration)
+    | before issuing a presigned upload URL.
+    |
+    */
+
+    'uploads' => [
+        'max_size' => (int) env('STORAGE_UPLOAD_MAX_SIZE', 5 * 1024 * 1024),
+        'allowed_mime_types' => [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'application/pdf',
+        ],
+    ],
+
 ];

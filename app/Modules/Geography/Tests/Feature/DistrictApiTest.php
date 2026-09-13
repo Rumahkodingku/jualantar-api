@@ -3,14 +3,9 @@
 use App\Modules\Geography\Domain\Models\District;
 use App\Modules\Geography\Domain\Models\Province;
 use App\Modules\Geography\Domain\Models\Regency;
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 it('requires the regency_id filter', function () {
@@ -91,8 +86,7 @@ it('returns 401 when a guest toggles a district', function () {
 });
 
 it('lets a super-admin deactivate a district and reactivate it', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $district = District::factory()->create(['is_active' => true]);
 
@@ -106,8 +100,7 @@ it('lets a super-admin deactivate a district and reactivate it', function () {
 });
 
 it('deactivates a district via delete idempotently', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $district = District::factory()->create(['is_active' => true]);
 

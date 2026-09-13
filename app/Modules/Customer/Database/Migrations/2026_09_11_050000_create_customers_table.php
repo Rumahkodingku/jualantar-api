@@ -15,10 +15,8 @@ return new class extends Migration
 
         Schema::create('customer.customers', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')
-                ->unique()
-                ->constrained('identity_access.users')
-                ->cascadeOnDelete();
+            // Cross-module reference to identity_access.users: no physical FK.
+            $table->uuid('user_id')->unique();
             $table->string('username', 150)->unique();
             $table->string('full_name', 150);
             $table->date('date_of_birth')->nullable();

@@ -1,7 +1,5 @@
 <?php
 
-use App\Modules\Merchant\Domain\Enums\MerchantStatus;
-use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Payout\Domain\Enums\PayoutOwnerType;
 use App\Modules\Payout\Domain\Enums\PayoutStatus;
 use App\Modules\Payout\Domain\Models\PayoutAccount;
@@ -63,7 +61,7 @@ it('allows the same bank to be used by many payout accounts', function () {
 });
 
 it('keeps the merchant status independent from the payout status', function () {
-    $merchant = Merchant::factory()->active()->create();
+    $merchant = $this->newMerchant(['status' => 'active']);
 
     $account = PayoutAccount::factory()
         ->forOwner(PayoutOwnerType::Merchant, $merchant->id)
@@ -71,6 +69,6 @@ it('keeps the merchant status independent from the payout status', function () {
 
     $account->update(['status' => PayoutStatus::Active]);
 
-    expect($merchant->fresh()->status)->toBe(MerchantStatus::Active)
+    expect($merchant->fresh()->status->value)->toBe('active')
         ->and($account->fresh()->status)->toBe(PayoutStatus::Active);
 });

@@ -1,16 +1,11 @@
 <?php
 
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
 use App\Modules\Service\Domain\Models\Service;
 use App\Modules\Service\Domain\Models\ServiceCategory;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 function serviceCategoryPayload(array $overrides = []): array
@@ -31,7 +26,7 @@ it('rejects a guest from creating a category', function () {
 });
 
 it('forbids a user without the manage permission', function () {
-    Sanctum::actingAs(User::factory()->customer()->create());
+    $this->actingAsCustomer();
 
     $service = Service::factory()->create();
 
@@ -41,7 +36,7 @@ it('forbids a user without the manage permission', function () {
 });
 
 it('creates a category under a service and generates its slug', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $service = Service::factory()->create();
 
@@ -55,7 +50,7 @@ it('creates a category under a service and generates its slug', function () {
 });
 
 it('allows the same slug across different services', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $food = Service::factory()->create();
     $mart = Service::factory()->create();
@@ -70,7 +65,7 @@ it('allows the same slug across different services', function () {
 });
 
 it('appends a numeric suffix for a duplicate slug within the same service', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $service = Service::factory()->create();
 
@@ -83,7 +78,7 @@ it('appends a numeric suffix for a duplicate slug within the same service', func
 });
 
 it('returns a 404 when creating a category for a missing service', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $this->postJson('/api/v1/services/'.Str::uuid().'/categories', serviceCategoryPayload())
         ->assertStatus(404)
@@ -91,7 +86,7 @@ it('returns a 404 when creating a category for a missing service', function () {
 });
 
 it('returns a validation problem when the category payload is invalid', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $service = Service::factory()->create();
 
@@ -102,7 +97,7 @@ it('returns a validation problem when the category payload is invalid', function
 });
 
 it('lists all categories with pagination metadata and service filter for managers', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $food = Service::factory()->create();
     $mart = Service::factory()->create();
@@ -126,7 +121,7 @@ it('lists all categories with pagination metadata and service filter for manager
 });
 
 it('shows inactive categories to managers', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $category = ServiceCategory::factory()->create(['is_active' => false]);
 
@@ -137,7 +132,7 @@ it('shows inactive categories to managers', function () {
 });
 
 it('updates a category and regenerates the slug when the name changes', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $category = ServiceCategory::factory()->create(['name' => 'Makanan', 'slug' => 'makanan']);
 
@@ -148,7 +143,7 @@ it('updates a category and regenerates the slug when the name changes', function
 });
 
 it('deactivates a category instead of deleting it and stays idempotent', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $category = ServiceCategory::factory()->create(['is_active' => true]);
 
@@ -160,7 +155,7 @@ it('deactivates a category instead of deleting it and stays idempotent', functio
 });
 
 it('reactivates a category through a partial update', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $category = ServiceCategory::factory()->create(['is_active' => false]);
 

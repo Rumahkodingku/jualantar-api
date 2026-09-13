@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Prometheus\CollectorRegistry;
+use Tests\Support\InteractsWithModules;
 use Tests\TestCase;
 
 /*
@@ -16,10 +17,12 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
+    ->use(InteractsWithModules::class)
     ->in('Unit', '../app/Modules/*/Tests/Unit');
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->use(InteractsWithModules::class)
     ->in('Feature', '../app/Modules/*/Tests/Feature');
 
 /*

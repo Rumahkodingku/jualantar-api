@@ -3,8 +3,8 @@
 namespace App\Modules\Customer\Database\Factories;
 
 use App\Modules\Customer\Domain\Models\Customer;
-use App\Modules\IdentityAccess\Domain\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Customer>
@@ -19,7 +19,7 @@ class CustomerFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'user_id' => (string) Str::uuid(),
             'username' => fake()->unique()->userName(),
             'full_name' => fake()->name(),
             'date_of_birth' => null,

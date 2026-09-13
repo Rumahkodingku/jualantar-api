@@ -82,4 +82,20 @@ class MerchantFactory extends Factory
     {
         return $this->state(fn (): array => ['service_id' => $serviceId]);
     }
+
+    /**
+     * An empty registration draft as created before the wizard is filled in.
+     */
+    public function blankDraft(string $userId): static
+    {
+        return $this->state(fn (): array => [
+            'user_id' => $userId,
+            'service_id' => null,
+            'business_name' => null,
+            'slug' => null,
+            'description' => null,
+            'type' => null,
+            'status' => MerchantStatus::Draft,
+        ]);
+    }
 }

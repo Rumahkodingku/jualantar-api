@@ -1,14 +1,9 @@
 <?php
 
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
 use App\Modules\Service\Domain\Models\Service;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 function serviceManagementPayload(array $overrides = []): array
@@ -27,7 +22,7 @@ it('rejects a guest from creating a service', function () {
 });
 
 it('forbids a user without the manage permission', function () {
-    Sanctum::actingAs(User::factory()->customer()->create());
+    $this->actingAsCustomer();
 
     $this->postJson('/api/v1/services', serviceManagementPayload())
         ->assertStatus(403)
@@ -35,7 +30,7 @@ it('forbids a user without the manage permission', function () {
 });
 
 it('creates a service and generates its slug', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $this->postJson('/api/v1/services', serviceManagementPayload())
         ->assertCreated()
@@ -47,7 +42,7 @@ it('creates a service and generates its slug', function () {
 });
 
 it('appends a numeric suffix when the generated slug already exists', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     Service::factory()->create(['name' => 'JAfood', 'slug' => 'jafood']);
 
@@ -57,7 +52,7 @@ it('appends a numeric suffix when the generated slug already exists', function (
 });
 
 it('returns a validation problem when the payload is invalid', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $this->postJson('/api/v1/services', [])
         ->assertStatus(422)
@@ -66,7 +61,7 @@ it('returns a validation problem when the payload is invalid', function () {
 });
 
 it('lists all services with pagination metadata for managers', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     Service::factory()->create(['is_active' => true]);
     Service::factory()->create(['is_active' => false]);
@@ -82,7 +77,7 @@ it('lists all services with pagination metadata for managers', function () {
 });
 
 it('filters the managed service list by status and search', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     Service::factory()->create(['name' => 'JAfood', 'slug' => 'jafood', 'is_active' => true]);
     Service::factory()->create(['name' => 'JAride', 'slug' => 'jaride', 'is_active' => false]);
@@ -99,7 +94,7 @@ it('filters the managed service list by status and search', function () {
 });
 
 it('shows inactive services to managers', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $service = Service::factory()->create(['is_active' => false]);
 
@@ -110,7 +105,7 @@ it('shows inactive services to managers', function () {
 });
 
 it('updates a service and regenerates the slug when the name changes', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $service = Service::factory()->create(['name' => 'JAfood', 'slug' => 'jafood']);
 
@@ -123,7 +118,7 @@ it('updates a service and regenerates the slug when the name changes', function 
 });
 
 it('deactivates a service instead of deleting it and stays idempotent', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $service = Service::factory()->create(['is_active' => true]);
 
@@ -135,7 +130,7 @@ it('deactivates a service instead of deleting it and stays idempotent', function
 });
 
 it('reactivates a service through a partial update', function () {
-    Sanctum::actingAs(User::factory()->superAdmin()->create());
+    $this->actingAsSuperAdmin();
 
     $service = Service::factory()->create(['is_active' => false]);
 

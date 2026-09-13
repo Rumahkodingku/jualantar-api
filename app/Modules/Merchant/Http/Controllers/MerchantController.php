@@ -63,17 +63,17 @@ class MerchantController extends Controller
 
         $merchants = $paginator->items();
 
-        $services = $this->serviceLookup->servicesByIds(array_values(array_unique(array_map(
-            fn (Merchant $merchant): string => $merchant->service_id,
+        $services = $this->serviceLookup->servicesByIds(array_values(array_unique(array_filter(array_map(
+            fn (Merchant $merchant): ?string => $merchant->service_id,
             $merchants,
-        ))));
+        )))));
 
         $owners = $this->userLookup->usersByIds(array_values(array_unique(array_filter(
             array_map(fn (Merchant $merchant): ?string => $merchant->user_id, $merchants),
         ))));
 
         foreach ($merchants as $merchant) {
-            $merchant->setAttribute('service', $services[$merchant->service_id] ?? null);
+            $merchant->setAttribute('service', $merchant->service_id === null ? null : ($services[$merchant->service_id] ?? null));
             $merchant->setAttribute('owner', $merchant->user_id === null ? null : ($owners[$merchant->user_id] ?? null));
         }
 
@@ -84,8 +84,10 @@ class MerchantController extends Controller
     {
         $merchant->load(['identity', 'legalEntity', 'categories', 'outlets', 'documents']);
 
-        $services = $this->serviceLookup->servicesByIds([$merchant->service_id]);
-        $merchant->setAttribute('service', $services[$merchant->service_id] ?? null);
+        $services = $merchant->service_id === null
+            ? []
+            : $this->serviceLookup->servicesByIds([$merchant->service_id]);
+        $merchant->setAttribute('service', $merchant->service_id === null ? null : ($services[$merchant->service_id] ?? null));
 
         $userIds = array_values(array_unique(array_filter([$merchant->user_id, $merchant->reviewed_by])));
         $users = $this->userLookup->usersByIds($userIds);

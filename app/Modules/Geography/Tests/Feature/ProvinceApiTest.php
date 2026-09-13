@@ -1,14 +1,9 @@
 <?php
 
 use App\Modules\Geography\Domain\Models\Province;
-use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
-use App\Modules\IdentityAccess\Domain\Models\User;
-use Laravel\Sanctum\Sanctum;
-use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
-    $this->seed(RbacSeeder::class);
-    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    $this->seedRbac();
 });
 
 it('lists only active provinces in the data envelope', function () {
@@ -85,8 +80,7 @@ it('returns 401 when a guest toggles a province', function () {
 });
 
 it('returns 403 when the user lacks the geography.update permission', function () {
-    $customer = User::factory()->customer()->create();
-    Sanctum::actingAs($customer);
+    $this->actingAsCustomer();
 
     $province = Province::factory()->create();
 
@@ -96,8 +90,7 @@ it('returns 403 when the user lacks the geography.update permission', function (
 });
 
 it('lets a super-admin deactivate and reactivate a province', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $province = Province::factory()->create(['is_active' => true]);
 
@@ -113,8 +106,7 @@ it('lets a super-admin deactivate and reactivate a province', function () {
 });
 
 it('returns a validation problem when is_active is missing on update', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $province = Province::factory()->create();
 
@@ -124,8 +116,7 @@ it('returns a validation problem when is_active is missing on update', function 
 });
 
 it('deactivates a province instead of deleting it and stays idempotent', function () {
-    $admin = User::factory()->superAdmin()->create();
-    Sanctum::actingAs($admin);
+    $this->actingAsSuperAdmin();
 
     $province = Province::factory()->create(['is_active' => true]);
 

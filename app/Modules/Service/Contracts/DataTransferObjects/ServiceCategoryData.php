@@ -11,5 +11,6 @@ final readonly class ServiceCategoryData
         public string $slug,
         public string $description,
         public string $icon,
+        public bool $isActive,
     ) {}
 }

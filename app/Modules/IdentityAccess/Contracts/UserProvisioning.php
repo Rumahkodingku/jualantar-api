@@ -2,14 +2,17 @@
 
 namespace App\Modules\IdentityAccess\Contracts;
 
-use App\Modules\IdentityAccess\Domain\Models\User;
+use App\Modules\IdentityAccess\Contracts\DataTransferObjects\UserData;
 
 interface UserProvisioning
 {
     /**
-     * Provision a new identity user.
+     * Provision a new identity user for the customer role.
+     *
+     * The returned DTO is the only representation other modules may hold;
+     * the Eloquent model and the RBAC assignment stay inside IdentityAccess.
      *
      * @param  array{email: string, phone?: string|null, password: string}  $attributes
      */
-    public function create(array $attributes): User;
+    public function provisionCustomer(array $attributes): UserData;
 }

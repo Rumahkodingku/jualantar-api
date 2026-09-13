@@ -14,5 +14,6 @@ final readonly class PayoutAccountData
         public bool $isPrimary,
         public string $status,
         public ?string $rejectionReason,
+        public ?string $bankName = null,
     ) {}
 }
