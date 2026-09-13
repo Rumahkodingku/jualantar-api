@@ -96,7 +96,7 @@ class ServiceCategoryController extends Controller
     {
         return ApiResponse::fromResult(
             ($this->storeServiceCategory)($service, $request->validated()),
-            fn (ServiceCategory $category) => ApiResponse::created(
+            fn(ServiceCategory $category) => ApiResponse::created(
                 new ServiceCategoryResource($category),
                 route('api.v1.categories.show', $category),
             ),
@@ -108,7 +108,7 @@ class ServiceCategoryController extends Controller
     {
         return ApiResponse::fromResult(
             ($this->updateServiceCategory)($category, $request->validated()),
-            fn (ServiceCategory $category) => ApiResponse::success(new ServiceCategoryResource($category)),
+            fn(ServiceCategory $category) => ApiResponse::success(new ServiceCategoryResource($category)),
         );
     }
 

@@ -60,7 +60,7 @@ class ServiceController extends Controller
     {
         return ApiResponse::fromResult(
             ($this->storeService)($request->validated()),
-            fn (Service $service) => ApiResponse::created(
+            fn(Service $service) => ApiResponse::created(
                 new ServiceResource($service),
                 route('api.v1.services.show', $service),
             ),
@@ -72,7 +72,7 @@ class ServiceController extends Controller
     {
         return ApiResponse::fromResult(
             ($this->updateService)($service, $request->validated()),
-            fn (Service $service) => ApiResponse::success(new ServiceResource($service)),
+            fn(Service $service) => ApiResponse::success(new ServiceResource($service)),
         );
     }
 
