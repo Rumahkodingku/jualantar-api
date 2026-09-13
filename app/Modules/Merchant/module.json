@@ -1,0 +1,13 @@
+{
+    "name": "Merchant",
+    "description": "Domain merchant: identitas, badan usaha, kategori, outlet, dan dokumen.",
+    "classification": "core",
+    "depends_on": [
+        "IdentityAccess",
+        "Service",
+        "Geography",
+        "Storage",
+        "Payout"
+    ],
+    "exposes_contracts": []
+}

@@ -44,6 +44,55 @@ final class EloquentServiceLookup implements ServiceLookup
             ->all();
     }
 
+    /**
+     * @param  list<string>  $serviceIds
+     * @return array<string, ServiceData>
+     */
+    public function servicesByIds(array $serviceIds): array
+    {
+        if ($serviceIds === []) {
+            return [];
+        }
+
+        return Service::query()
+            ->whereKey($serviceIds)
+            ->get()
+            ->keyBy('id')
+            ->map(fn (Service $service): ServiceData => new ServiceData(
+                id: $service->id,
+                name: $service->name,
+                slug: $service->slug,
+                description: $service->description,
+                icon: $service->icon,
+            ))
+            ->all();
+    }
+
+    /**
+     * @param  list<string>  $categoryIds
+     * @return array<string, ServiceCategoryData>
+     */
+    public function categoriesByIds(array $categoryIds): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        return ServiceCategory::query()
+            ->whereKey($categoryIds)
+            ->get()
+            ->keyBy('id')
+            ->map(fn (ServiceCategory $category): ServiceCategoryData => new ServiceCategoryData(
+                id: $category->id,
+                serviceId: $category->service_id,
+                name: $category->name,
+                slug: $category->slug,
+                description: $category->description,
+                icon: $category->icon,
+            ))
+            ->all();
+    }
+
     public function serviceExists(string $serviceId): bool
     {
         return Service::query()->whereKey($serviceId)->exists();

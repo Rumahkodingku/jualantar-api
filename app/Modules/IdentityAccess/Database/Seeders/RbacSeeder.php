@@ -47,6 +47,7 @@ class RbacSeeder extends Seeder
         'geography.update',
         'services.manage',
         'categories.manage',
+        'payout_accounts.manage',
     ];
 
     /**
@@ -75,6 +76,7 @@ class RbacSeeder extends Seeder
             'geography.update',
             'services.manage',
             'categories.manage',
+            'payout_accounts.manage',
         ],
         'customer' => [
             'profile.view',

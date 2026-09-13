@@ -1,0 +1,11 @@
+{
+    "name": "Payout",
+    "description": "Rekening pencairan (payout account) untuk merchant dan driver.",
+    "classification": "supporting",
+    "depends_on": [
+        "BankDirectory"
+    ],
+    "exposes_contracts": [
+        "App\\Modules\\Payout\\Contracts\\PayoutAccountLookup"
+    ]
+}

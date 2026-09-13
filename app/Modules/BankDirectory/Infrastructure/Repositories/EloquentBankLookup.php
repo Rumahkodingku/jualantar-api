@@ -30,4 +30,28 @@ final class EloquentBankLookup implements BankLookup
             isActive: $bank->is_active,
         );
     }
+
+    /**
+     * @param  list<int>  $bankIds
+     * @return array<int, BankData>
+     */
+    public function banks(array $bankIds): array
+    {
+        if ($bankIds === []) {
+            return [];
+        }
+
+        return Bank::query()
+            ->whereKey($bankIds)
+            ->get()
+            ->keyBy('id')
+            ->map(fn (Bank $bank): BankData => new BankData(
+                id: $bank->id,
+                code: $bank->code,
+                name: $bank->name,
+                category: $bank->category,
+                isActive: $bank->is_active,
+            ))
+            ->all();
+    }
 }

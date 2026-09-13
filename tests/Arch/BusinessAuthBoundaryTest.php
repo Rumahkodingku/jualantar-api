@@ -9,7 +9,7 @@
  * The scan intentionally avoids the Laravel container/helpers so it can run
  * inside the Arch test suite without booting the application.
  */
-$businessModules = ['Customer', 'Geography', 'BankDirectory', 'Service'];
+$businessModules = ['Customer', 'Geography', 'BankDirectory', 'Service', 'Merchant', 'Payout'];
 
 $forbiddenPatterns = [
     'Hash::check(',

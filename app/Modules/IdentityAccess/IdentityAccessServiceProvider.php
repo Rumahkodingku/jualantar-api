@@ -4,8 +4,10 @@ namespace App\Modules\IdentityAccess;
 
 use App\Modules\IdentityAccess\Contracts\Authorization;
 use App\Modules\IdentityAccess\Contracts\EmailVerification;
+use App\Modules\IdentityAccess\Contracts\UserLookup;
 use App\Modules\IdentityAccess\Contracts\UserProvisioning;
 use App\Modules\IdentityAccess\Infrastructure\Authorization\SpatieAuthorization;
+use App\Modules\IdentityAccess\Infrastructure\Users\EloquentUserLookup;
 use App\Modules\IdentityAccess\Infrastructure\Users\EloquentUserProvisioning;
 use App\Modules\IdentityAccess\Infrastructure\Verification\LaravelEmailVerification;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +19,7 @@ final class IdentityAccessServiceProvider extends ServiceProvider
     {
         $this->app->bind(Authorization::class, SpatieAuthorization::class);
         $this->app->bind(UserProvisioning::class, EloquentUserProvisioning::class);
+        $this->app->bind(UserLookup::class, EloquentUserLookup::class);
         $this->app->bind(EmailVerification::class, LaravelEmailVerification::class);
     }
 

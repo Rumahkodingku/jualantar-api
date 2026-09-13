@@ -32,4 +32,29 @@ final class EloquentGeographyLookup implements GeographyLookup
             province: $village->district->regency->province->name,
         );
     }
+
+    /**
+     * @param  list<int>  $villageIds
+     * @return array<int, AddressLabelData>
+     */
+    public function villageLabels(array $villageIds): array
+    {
+        if ($villageIds === []) {
+            return [];
+        }
+
+        return Village::query()
+            ->with('district.regency.province')
+            ->whereKey($villageIds)
+            ->get()
+            ->keyBy('id')
+            ->map(fn (Village $village): AddressLabelData => new AddressLabelData(
+                villageId: $village->id,
+                village: $village->name,
+                district: $village->district->name,
+                regency: $village->district->regency->name,
+                province: $village->district->regency->province->name,
+            ))
+            ->all();
+    }
 }

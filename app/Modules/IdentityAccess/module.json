@@ -4,6 +4,7 @@
     "classification": "generic",
     "depends_on": [],
     "exposes_contracts": [
-        "App\\Modules\\IdentityAccess\\Contracts\\Authorization"
+        "App\\Modules\\IdentityAccess\\Contracts\\Authorization",
+        "App\\Modules\\IdentityAccess\\Contracts\\UserLookup"
     ]
 }

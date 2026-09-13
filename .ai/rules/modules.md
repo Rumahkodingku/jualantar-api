@@ -11,3 +11,6 @@ Business code lives in app/Modules/{Module} (Domain, Application, Infrastructure
 
 ## Explicit module registration
 Every module has {Module}ServiceProvider registered manually in bootstrap/providers.php (no auto-discovery), a module.json manifest, and loads its own migrations and versioned routes (Route::middleware('api')->prefix('api/v1')->name('api.v1.')) from within the provider. Models use #[Table('schema.table')] and #[UseFactory(ModuleFactory::class)]; do not use the deprecated loadFactoriesFrom.
+
+## Cross-module access via Contracts only (no FK, no Eloquent relations)
+Modules communicate only through `Contracts/` (interface + DTO). Production code must never import another module's `Domain`/`Application`/`Infrastructure`, and migrations must not add physical FKs across modules — store IDs as plain columns and validate via the owner module's Contract. Enforced by `tests/Arch/ModuleBoundaryTest.php`. Test files (namespace-less) are exempt and may import models to arrange data.
