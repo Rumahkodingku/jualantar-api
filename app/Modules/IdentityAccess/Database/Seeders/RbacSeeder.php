@@ -45,6 +45,8 @@ class RbacSeeder extends Seeder
         'deliveries.view',
         'deliveries.update',
         'geography.update',
+        'services.manage',
+        'categories.manage',
     ];
 
     /**
@@ -71,6 +73,8 @@ class RbacSeeder extends Seeder
             'permissions.update',
             'permissions.delete',
             'geography.update',
+            'services.manage',
+            'categories.manage',
         ],
         'customer' => [
             'profile.view',

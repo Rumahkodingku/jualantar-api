@@ -1,0 +1,9 @@
+{
+    "name": "Service",
+    "description": "Master/reference layanan JualAntar dan kategori layanan.",
+    "classification": "generic",
+    "depends_on": [],
+    "exposes_contracts": [
+        "App\\Modules\\Service\\Contracts\\ServiceLookup"
+    ]
+}

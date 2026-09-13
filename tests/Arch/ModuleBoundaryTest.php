@@ -1,6 +1,6 @@
 <?php
 
-$modules = ['Customer', 'Geography', 'BankDirectory'];
+$modules = ['Customer', 'Geography', 'BankDirectory', 'Service'];
 
 foreach ($modules as $module) {
     arch("{$module}: Domain hanya dipakai dalam modulnya sendiri")
@@ -29,26 +29,26 @@ arch('Shared Kernel tidak boleh bergantung ke modul bisnis mana pun')
     ->not->toUse('App\Modules');
 
 arch('modul bisnis tidak boleh memakai internal Spatie Permission secara langsung')
-    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory'])
+    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\Service'])
     ->not->toUse('Spatie\Permission');
 
 arch('modul bisnis tidak boleh menangani credential/token langsung')
-    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory'])
+    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\Service'])
     ->not->toUse([
         'Illuminate\Support\Facades\Hash',
         'Illuminate\Support\Facades\Auth',
     ]);
 
 arch('modul lain hanya mengakses IdentityAccess lewat Contracts')
-    ->expect(['App\Modules\Geography', 'App\Modules\BankDirectory'])
+    ->expect(['App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\Service'])
     ->not->toUse('App\Modules\IdentityAccess\Domain');
 
 arch('modul lain tidak menembus Application layer IdentityAccess')
-    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory'])
+    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\Service'])
     ->not->toUse('App\Modules\IdentityAccess\Application');
 
 arch('modul lain tidak menembus Infrastructure layer IdentityAccess')
-    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory'])
+    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\Service'])
     ->not->toUse('App\Modules\IdentityAccess\Infrastructure');
 
 arch('IdentityAccess tidak bergantung pada business module (tanpa circular dependency)')
@@ -73,7 +73,7 @@ arch('Storage tidak bergantung pada modul bisnis mana pun')
     ]);
 
 arch('modul bisnis hanya boleh mengakses Storage lewat Contracts')
-    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\IdentityAccess'])
+    ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\Service', 'App\Modules\IdentityAccess'])
     ->not->toUse([
         'App\Modules\Storage\Domain',
         'App\Modules\Storage\Application',
