@@ -33,6 +33,16 @@ trait ReportsRegistrationErrors
         ));
     }
 
+    private function duplicateAccount(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'validation_error',
+            message: 'An account with the given email or phone already exists.',
+            status: 422,
+            title: 'Validation Failed',
+        ));
+    }
+
     private function invalidRegistrationState(
         string $message = 'The merchant registration is not in a modifiable state.',
     ): Result {

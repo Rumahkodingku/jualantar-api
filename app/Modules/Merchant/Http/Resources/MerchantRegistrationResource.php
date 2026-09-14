@@ -40,6 +40,8 @@ class MerchantRegistrationResource extends JsonResource
             'outlets' => MerchantOutletResource::collection($this->whenLoaded('outlets')),
             'documents' => MerchantDocumentResource::collection($this->whenLoaded('documents')),
             'payout_accounts' => $this->payout_accounts,
+            'rejection_stage' => $this->rejection_stage?->value,
+            'rejection_reason' => $this->rejection_reason,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

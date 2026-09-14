@@ -23,4 +23,20 @@ final class EloquentUserProvisioning implements UserProvisioning
             emailVerified: $user->hasVerifiedEmail(),
         );
     }
+
+    /**
+     * @param  array{email: string, phone?: string|null, password: string}  $attributes
+     */
+    public function provisionMerchant(array $attributes): UserData
+    {
+        $user = User::create($attributes);
+        $user->assignRole('merchant');
+
+        return new UserData(
+            id: $user->id,
+            email: $user->email,
+            phone: $user->phone,
+            emailVerified: $user->hasVerifiedEmail(),
+        );
+    }
 }

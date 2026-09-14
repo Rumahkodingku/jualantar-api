@@ -1,10 +1,15 @@
 <?php
 
+use App\Modules\Merchant\Http\Controllers\MerchantAccountController;
 use App\Modules\Merchant\Http\Controllers\MerchantController;
 use App\Modules\Merchant\Http\Controllers\MerchantRegistrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
+    Route::post('/merchants/register', [MerchantAccountController::class, 'register'])
+        ->middleware('throttle:merchant.register')
+        ->name('merchants.register');
+
     Route::middleware(['auth:sanctum'])->prefix('merchants/registration')->name('merchants.registration.')->group(function () {
         Route::post('/', [MerchantRegistrationController::class, 'store'])->name('store');
         Route::get('/', [MerchantRegistrationController::class, 'show'])->name('show');
@@ -26,6 +31,7 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
 
         Route::get('/review', [MerchantRegistrationController::class, 'review'])->name('review');
         Route::post('/submit', [MerchantRegistrationController::class, 'submit'])->name('submit');
+        Route::post('/reopen', [MerchantRegistrationController::class, 'reopen'])->name('reopen');
     });
 
     Route::middleware(['auth:sanctum', 'permission:merchant.view,sanctum'])->group(function () {

@@ -8,6 +8,7 @@ use App\Modules\Merchant\Application\Actions\CreateMerchantOutlet;
 use App\Modules\Merchant\Application\Actions\CreateRegistrationUpload;
 use App\Modules\Merchant\Application\Actions\DeleteMerchantOutlet;
 use App\Modules\Merchant\Application\Actions\RegisterMerchant;
+use App\Modules\Merchant\Application\Actions\ReopenMerchantRegistration;
 use App\Modules\Merchant\Application\Actions\SaveLegalEntity;
 use App\Modules\Merchant\Application\Actions\SaveMerchantCategories;
 use App\Modules\Merchant\Application\Actions\SaveMerchantIdentity;
@@ -64,6 +65,7 @@ class MerchantRegistrationController extends Controller
         private readonly AttachMerchantDocument $attachMerchantDocument,
         private readonly SavePayoutAccount $savePayoutAccount,
         private readonly SubmitMerchantRegistration $submitMerchantRegistration,
+        private readonly ReopenMerchantRegistration $reopenMerchantRegistration,
         private readonly ServiceLookup $serviceLookup,
         private readonly GeographyLookup $geographyLookup,
         private readonly PayoutAccountLookup $payoutLookup,
@@ -209,6 +211,14 @@ class MerchantRegistrationController extends Controller
     {
         return ApiResponse::fromResult(
             ($this->submitMerchantRegistration)($this->registration()),
+            fn (Merchant $merchant) => ApiResponse::success($this->statusPayload($merchant)),
+        );
+    }
+
+    public function reopen(): JsonResponse
+    {
+        return ApiResponse::fromResult(
+            ($this->reopenMerchantRegistration)($this->registration()),
             fn (Merchant $merchant) => ApiResponse::success($this->statusPayload($merchant)),
         );
     }
