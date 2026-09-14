@@ -24,7 +24,7 @@ final class RegisterMerchantAccount
     /**
      * Register a merchant identity account and send the verification email.
      *
-     * @param  array{email: string, phone: string, full_name: string, password: string}  $data
+     * @param  array{email: string, phone: string, password: string}  $data
      */
     public function __invoke(array $data): Result
     {
@@ -34,7 +34,6 @@ final class RegisterMerchantAccount
             $user = DB::transaction(fn (): UserData => $this->userProvisioning->provisionMerchant([
                 'email' => $data['email'],
                 'phone' => $phone,
-                'full_name' => $data['full_name'],
                 'password' => $data['password'],
             ]));
         } catch (UniqueConstraintViolationException) {

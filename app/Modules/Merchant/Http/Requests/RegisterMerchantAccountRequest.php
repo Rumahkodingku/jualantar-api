@@ -29,7 +29,6 @@ class RegisterMerchantAccountRequest extends FormRequest
         return [
             'email' => ['required', 'email', 'max:100', Rule::unique('users', 'email')],
             'phone' => ['required', 'string', 'max:30', Rule::unique('users', 'phone')],
-            'full_name' => ['required', 'string', 'max:150'],
             'password' => ['required', 'confirmed', 'string', Password::min(8)->letters()->numbers()],
             'terms_accepted' => ['required', 'boolean', 'accepted'],
         ];

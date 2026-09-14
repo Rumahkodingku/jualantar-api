@@ -17,7 +17,6 @@ function merchantAccountPayload(array $overrides = []): array
     return array_merge([
         'email' => 'merchant@example.com',
         'phone' => '081234567890',
-        'full_name' => 'Merchant Owner',
         'password' => 'StrongPassword123',
         'password_confirmation' => 'StrongPassword123',
         'terms_accepted' => true,
@@ -37,8 +36,7 @@ it('registers a merchant account, assigns the role and sends verification', func
         ->and($user->hasRole('merchant'))->toBeTrue()
         ->and($user->getRoleNames()->all())->toBe(['merchant'])
         ->and($user->email_verified_at)->toBeNull()
-        ->and($user->phone)->toBe('+6281234567890')
-        ->and($user->full_name)->toBe('Merchant Owner');
+        ->and($user->phone)->toBe('+6281234567890');
 
     Notification::assertSentTo(
         $user,
