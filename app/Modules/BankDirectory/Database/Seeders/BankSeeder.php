@@ -22,7 +22,7 @@ class BankSeeder extends Seeder
 
         $now = now();
 
-        $rows = array_map(fn(array $bank): array => $bank + [
+        $rows = array_map(fn (array $bank): array => $bank + [
             'created_at' => $now,
             'updated_at' => $now,
         ], $banks);

@@ -65,7 +65,7 @@ class RegionSeeder extends Seeder
      */
     private function seedProvinces(array $rows): array
     {
-        $chunks = array_chunk(array_map(fn(array $row) => [
+        $chunks = array_chunk(array_map(fn (array $row) => [
             'code' => $row['code'],
             'name' => $row['name'],
             'created_at' => $row['created_at'],
@@ -87,7 +87,7 @@ class RegionSeeder extends Seeder
     private function seedRegencies(array $rows, array $provinceIds): array
     {
         $chunks = array_chunk(
-            array_map(fn(array $row) => [
+            array_map(fn (array $row) => [
                 'province_id' => $provinceIds[explode('.', $row['code'])[0]],
                 'code' => $row['code'],
                 'name' => $row['name'],
@@ -113,7 +113,7 @@ class RegionSeeder extends Seeder
     private function seedDistricts(array $rows, array $regencyIds): array
     {
         $chunks = array_chunk(
-            array_map(fn(array $row) => [
+            array_map(fn (array $row) => [
                 'regency_id' => $regencyIds[implode('.', array_slice(explode('.', $row['code']), 0, 2))],
                 'code' => $row['code'],
                 'name' => $row['name'],
@@ -140,7 +140,7 @@ class RegionSeeder extends Seeder
         $regencyTypes = Regency::whereIn('id', array_values($regencyIds))->pluck('type', 'code')->all();
 
         $chunks = array_chunk(
-            array_map(fn(array $row) => [
+            array_map(fn (array $row) => [
                 'district_id' => $districtIds[implode('.', array_slice(explode('.', $row['code']), 0, 3))],
                 'code' => $row['code'],
                 'name' => $row['name'],

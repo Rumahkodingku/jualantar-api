@@ -149,7 +149,7 @@ final class ProblemDetailsFactory
         $title ??= (string) config("api.codes.$code.title", Response::$statusTexts[$status] ?? 'Error');
 
         $details = new ProblemDetails(
-            type: $code === 'internal_server_error' ? 'about:blank' : $this->baseUrl . '/' . $code,
+            type: $code === 'internal_server_error' ? 'about:blank' : $this->baseUrl.'/'.$code,
             title: $title,
             status: $status,
             detail: $detail ?? $title,
@@ -225,7 +225,7 @@ final class ProblemDetailsFactory
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => collect($e->getTrace())
-                    ->map(fn(array $trace) => Arr::except($trace, ['args']))
+                    ->map(fn (array $trace) => Arr::except($trace, ['args']))
                     ->all(),
             ],
         ];
