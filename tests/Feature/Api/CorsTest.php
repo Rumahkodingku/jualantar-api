@@ -49,6 +49,15 @@ it('echoes the origin on an actual request from an allowed frontend', function (
         ->assertHeader('Access-Control-Allow-Origin', $origin);
 });
 
+it('allows a preflight upload request to the storage serving path', function () {
+    $this->withHeaders([
+        'Origin' => 'http://localhost:5173',
+        'Access-Control-Request-Method' => 'PUT',
+    ])->options('/storage/merchants/example/documents/file.pdf')
+        ->assertStatus(204)
+        ->assertHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
+});
+
 it('does not allow an origin outside the allowlist', function () {
     $this->withHeaders([
         'Origin' => 'http://evil.example.com',

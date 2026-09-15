@@ -4,6 +4,7 @@ use App\Modules\Merchant\Domain\Enums\MerchantType;
 use App\Modules\Merchant\Domain\Enums\OutletStatus;
 use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\MerchantCategory;
+use App\Modules\Merchant\Domain\Models\MerchantDocument;
 use App\Modules\Merchant\Domain\Models\MerchantIdentity;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Storage\Contracts\DataTransferObjects\StoredObject;
@@ -355,6 +356,57 @@ it('attaches a document only when the object key belongs to the merchant', funct
     ])
         ->assertStatus(422)
         ->assertJsonPath('code', 'upload_invalid');
+});
+
+it('accepts the extended document types', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    $merchant = Merchant::factory()->blankDraft($user->id)->create();
+
+    $types = ['swafoto', 'rekening', 'foto_outlet', 'identitas_direktur', 'izin_usaha'];
+
+    foreach ($types as $type) {
+        $this->postJson('/api/v1/merchants/registration/documents', [
+            'document_type' => $type,
+            'object_key' => "merchants/{$merchant->id}/documents/{$type}.jpg",
+            'file_name' => "{$type}.jpg",
+            'mime_type' => 'image/jpeg',
+            'file_size' => 245678,
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.document_type', $type);
+    }
+
+    expect($merchant->refresh()->documents)->toHaveCount(count($types));
+});
+
+it('deletes a document that belongs to the merchant', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    $merchant = Merchant::factory()->blankDraft($user->id)->create();
+    $document = MerchantDocument::factory()->create([
+        'merchant_id' => $merchant->id,
+        'object_key' => "merchants/{$merchant->id}/documents/ktp.jpg",
+    ]);
+
+    $this->deleteJson("/api/v1/merchants/registration/documents/{$document->id}")
+        ->assertNoContent();
+
+    expect(MerchantDocument::query()->find($document->id))->toBeNull();
+});
+
+it('refuses to delete a document owned by another merchant', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    Merchant::factory()->blankDraft($user->id)->create();
+    $otherMerchant = Merchant::factory()->create();
+    $document = MerchantDocument::factory()->create(['merchant_id' => $otherMerchant->id]);
+
+    $this->deleteJson("/api/v1/merchants/registration/documents/{$document->id}")
+        ->assertStatus(404)
+        ->assertJsonPath('code', 'merchant_registration_not_found');
+
+    expect(MerchantDocument::query()->find($document->id))->not->toBeNull();
 });
 
 it('saves a payout account through the payout contract', function () {

@@ -6,6 +6,7 @@ use App\Modules\Geography\Contracts\GeographyLookup;
 use App\Modules\Merchant\Application\Actions\AttachMerchantDocument;
 use App\Modules\Merchant\Application\Actions\CreateMerchantOutlet;
 use App\Modules\Merchant\Application\Actions\CreateRegistrationUpload;
+use App\Modules\Merchant\Application\Actions\DeleteMerchantDocument;
 use App\Modules\Merchant\Application\Actions\DeleteMerchantOutlet;
 use App\Modules\Merchant\Application\Actions\RegisterMerchant;
 use App\Modules\Merchant\Application\Actions\ReopenMerchantRegistration;
@@ -63,6 +64,7 @@ class MerchantRegistrationController extends Controller
         private readonly DeleteMerchantOutlet $deleteMerchantOutlet,
         private readonly CreateRegistrationUpload $createRegistrationUpload,
         private readonly AttachMerchantDocument $attachMerchantDocument,
+        private readonly DeleteMerchantDocument $deleteMerchantDocument,
         private readonly SavePayoutAccount $savePayoutAccount,
         private readonly SubmitMerchantRegistration $submitMerchantRegistration,
         private readonly ReopenMerchantRegistration $reopenMerchantRegistration,
@@ -194,6 +196,16 @@ class MerchantRegistrationController extends Controller
 
                 return ApiResponse::created(new MerchantDocumentResource($document));
             },
+        );
+    }
+
+    public function destroyDocument(MerchantDocument $document): Response|JsonResponse
+    {
+        $merchant = $this->registration();
+
+        return ApiResponse::fromResult(
+            ($this->deleteMerchantDocument)($merchant, $document),
+            fn () => ApiResponse::noContent(),
         );
     }
 

@@ -26,6 +26,9 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
 
         Route::post('/uploads', [MerchantRegistrationController::class, 'storeUpload'])->name('uploads.store');
         Route::post('/documents', [MerchantRegistrationController::class, 'storeDocument'])->name('documents.store');
+        Route::delete('/documents/{document}', [MerchantRegistrationController::class, 'destroyDocument'])
+            ->whereUuid('document')
+            ->name('documents.destroy');
 
         Route::put('/payout-account', [MerchantRegistrationController::class, 'savePayoutAccount'])->name('payout_account.update');
 
