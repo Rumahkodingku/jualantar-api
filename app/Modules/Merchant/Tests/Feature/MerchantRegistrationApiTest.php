@@ -312,6 +312,94 @@ it('creates, updates and deletes outlets while validating geography and operatin
     expect(MerchantOutlet::query()->count())->toBe(0);
 });
 
+it('issues a presigned upload for outlet photos under the outlets folder', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    $merchant = Merchant::factory()->blankDraft($user->id)->create();
+
+    $response = $this->postJson('/api/v1/merchants/registration/uploads', [
+        'purpose' => 'outlet',
+        'file_name' => 'foto.jpg',
+        'mime_type' => 'image/jpeg',
+        'file_size' => 102400,
+    ])
+        ->assertCreated()
+        ->assertJsonStructure(['data' => ['object_key', 'upload_url', 'headers', 'expires_at']]);
+
+    $objectKey = $response->json('data.object_key');
+
+    expect($objectKey)->toStartWith("merchants/{$merchant->id}/outlets/")
+        ->and($merchant->refresh()->logo)->toBeNull();
+});
+
+it('stores outlet photos and exposes temporary urls', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    $merchant = Merchant::factory()->blankDraft($user->id)->create();
+
+    $village = $this->newVillage([
+        'district_id' => $this->newDistrict([
+            'regency_id' => $this->newRegency([
+                'province_id' => $this->newProvince()->id,
+            ])->id,
+        ])->id,
+    ]);
+
+    $photos = [
+        "merchants/{$merchant->id}/outlets/front.jpg",
+        "merchants/{$merchant->id}/outlets/side.jpg",
+    ];
+
+    $this->postJson('/api/v1/merchants/registration/outlets', outletPayload($village->id, ['photos' => $photos]))
+        ->assertCreated()
+        ->assertJsonPath('data.outlets.0.photos', $photos)
+        ->assertJsonPath('data.outlets.0.photos_url.0', 'https://storage.test/'.$photos[0]);
+
+    $outlet = MerchantOutlet::query()->firstOrFail();
+
+    expect($outlet->photos)->toBe($photos);
+});
+
+it('rejects outlet photos that do not belong to the merchant', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    Merchant::factory()->blankDraft($user->id)->create();
+
+    $village = $this->newVillage([
+        'district_id' => $this->newDistrict([
+            'regency_id' => $this->newRegency([
+                'province_id' => $this->newProvince()->id,
+            ])->id,
+        ])->id,
+    ]);
+
+    $this->postJson('/api/v1/merchants/registration/outlets', outletPayload($village->id, [
+        'photos' => ['merchants/other-merchant/outlets/front.jpg'],
+    ]))
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'upload_invalid');
+});
+
+it('replaces outlet photos when updating', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    $merchant = Merchant::factory()->blankDraft($user->id)->create();
+
+    $keep = "merchants/{$merchant->id}/outlets/keep.jpg";
+    $remove = "merchants/{$merchant->id}/outlets/remove.jpg";
+
+    $outlet = MerchantOutlet::factory()->create([
+        'merchant_id' => $merchant->id,
+        'photos' => [$keep, $remove],
+    ]);
+
+    $this->patchJson("/api/v1/merchants/registration/outlets/{$outlet->id}", ['photos' => [$keep]])
+        ->assertOk()
+        ->assertJsonPath('data.outlets.0.photos', [$keep]);
+
+    expect($outlet->refresh()->photos)->toBe([$keep]);
+});
+
 it('issues a presigned upload and stores the logo object key', function () {
     $user = $this->plainUser();
     Sanctum::actingAs($user);

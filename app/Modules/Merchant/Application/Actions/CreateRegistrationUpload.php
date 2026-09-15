@@ -24,7 +24,11 @@ final class CreateRegistrationUpload
             return $error;
         }
 
-        $folder = $data['purpose'] === 'logo' ? 'logo' : 'documents';
+        $folder = match ($data['purpose']) {
+            'logo' => 'logo',
+            'outlet' => 'outlets',
+            default => 'documents',
+        };
         $extension = pathinfo($data['file_name'], PATHINFO_EXTENSION);
         $assetId = (string) Str::uuid();
         $objectKey = "merchants/{$merchant->id}/{$folder}/{$assetId}".($extension === '' ? '' : ".{$extension}");

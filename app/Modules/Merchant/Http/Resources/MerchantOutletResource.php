@@ -33,6 +33,8 @@ class MerchantOutletResource extends JsonResource
             'service_area_type' => $this->service_area_type->value,
             'service_radius_km' => $this->service_radius_km,
             'operating_hours' => $this->operating_hours,
+            'photos' => $this->photos ?? [],
+            'photos_url' => $this->photos_url ?? [],
             'status' => $this->status->value,
             'geography' => $this->geography === null ? null : [
                 'village' => $this->geography->village,

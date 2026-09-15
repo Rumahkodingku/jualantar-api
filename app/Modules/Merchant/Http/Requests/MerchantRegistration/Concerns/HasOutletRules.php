@@ -42,6 +42,8 @@ trait HasOutletRules
             'service_radius_km' => ['nullable', 'numeric', 'min:0.1', 'max:999.99', 'required_if:service_area_type,radius'],
             'status' => ['sometimes', Rule::in(OutletStatus::values())],
             'operating_hours' => ['nullable', 'array'],
+            'photos' => ['nullable', 'array'],
+            'photos.*' => ['required', 'string', 'max:500'],
         ];
 
         foreach (self::DAYS as $day) {

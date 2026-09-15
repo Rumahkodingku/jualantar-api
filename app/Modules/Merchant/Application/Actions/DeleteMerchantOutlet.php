@@ -2,14 +2,18 @@
 
 namespace App\Modules\Merchant\Application\Actions;
 
+use App\Modules\Merchant\Application\Concerns\ManagesOutletPhotos;
 use App\Modules\Merchant\Application\Concerns\ReportsRegistrationErrors;
 use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
+use App\Modules\Storage\Contracts\ObjectStorage;
 use App\Shared\Result\Result;
 
 final class DeleteMerchantOutlet
 {
-    use ReportsRegistrationErrors;
+    use ManagesOutletPhotos, ReportsRegistrationErrors;
+
+    public function __construct(private readonly ObjectStorage $storage) {}
 
     public function __invoke(Merchant $merchant, MerchantOutlet $outlet): Result
     {
@@ -21,7 +25,11 @@ final class DeleteMerchantOutlet
             return $this->registrationNotFound();
         }
 
+        $photos = $outlet->photos ?? [];
+
         $outlet->delete();
+
+        $this->deleteOutletPhotos($this->storage, $photos);
 
         return Result::ok(null);
     }

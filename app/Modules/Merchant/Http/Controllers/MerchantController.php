@@ -112,6 +112,7 @@ class MerchantController extends Controller
 
         foreach ($merchant->outlets as $outlet) {
             $outlet->setAttribute('geography', $labels[$outlet->village_id] ?? null);
+            $outlet->setAttribute('photos_url', $this->temporaryUrls($outlet->photos ?? []));
         }
 
         if ($merchant->legalEntity !== null) {
@@ -144,6 +145,15 @@ class MerchantController extends Controller
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /**
+     * @param  list<string>  $paths
+     * @return list<string|null>
+     */
+    private function temporaryUrls(array $paths): array
+    {
+        return array_values(array_map(fn (string $path): ?string => $this->temporaryUrl($path), $paths));
     }
 
     /**

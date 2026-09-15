@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'service_area_type',
     'service_radius_km',
     'operating_hours',
+    'photos',
     'status',
 ])]
 class MerchantOutlet extends Model
@@ -55,6 +56,7 @@ class MerchantOutlet extends Model
             'service_area_type' => OutletServiceAreaType::class,
             'status' => OutletStatus::class,
             'operating_hours' => 'array',
+            'photos' => 'array',
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
             'service_radius_km' => 'decimal:2',
