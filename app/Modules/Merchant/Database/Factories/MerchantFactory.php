@@ -5,6 +5,7 @@ namespace App\Modules\Merchant\Database\Factories;
 use App\Modules\Merchant\Domain\Enums\MerchantStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantType;
 use App\Modules\Merchant\Domain\Models\Merchant;
+use App\Modules\Merchant\Domain\Models\MerchantApplication;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -31,11 +32,7 @@ class MerchantFactory extends Factory
             'description' => fake()->sentence(),
             'type' => MerchantType::Individual,
             'logo' => null,
-            'status' => MerchantStatus::Draft,
-            'rejection_stage' => null,
-            'rejection_reason' => null,
-            'reviewed_at' => null,
-            'reviewed_by' => null,
+            'status' => MerchantStatus::Inactive,
         ];
     }
 
@@ -44,33 +41,19 @@ class MerchantFactory extends Factory
         return $this->state(fn (): array => ['type' => MerchantType::Company]);
     }
 
-    public function pending(): static
+    public function inactive(): static
     {
-        return $this->state(fn (): array => ['status' => MerchantStatus::Pending]);
+        return $this->state(fn (): array => ['status' => MerchantStatus::Inactive]);
     }
 
     public function active(): static
     {
-        return $this->state(fn (): array => [
-            'status' => MerchantStatus::Active,
-            'reviewed_at' => now(),
-            'reviewed_by' => (string) Str::uuid(),
-        ]);
+        return $this->state(fn (): array => ['status' => MerchantStatus::Active]);
     }
 
     public function suspended(): static
     {
         return $this->state(fn (): array => ['status' => MerchantStatus::Suspended]);
-    }
-
-    public function rejected(): static
-    {
-        return $this->state(fn (): array => [
-            'status' => MerchantStatus::Rejected,
-            'rejection_reason' => fake()->sentence(),
-            'reviewed_at' => now(),
-            'reviewed_by' => (string) Str::uuid(),
-        ]);
     }
 
     public function forUser(string $userId): static
@@ -95,7 +78,9 @@ class MerchantFactory extends Factory
             'slug' => null,
             'description' => null,
             'type' => null,
-            'status' => MerchantStatus::Draft,
-        ]);
+            'status' => MerchantStatus::Inactive,
+        ])->afterCreating(function (Merchant $merchant): void {
+            MerchantApplication::factory()->forMerchant($merchant->id)->create();
+        });
     }
 }

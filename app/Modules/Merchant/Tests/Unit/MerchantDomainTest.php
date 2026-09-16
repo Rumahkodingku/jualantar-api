@@ -1,9 +1,11 @@
 <?php
 
+use App\Modules\Merchant\Domain\Enums\MerchantApplicationStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantStatus;
 use App\Modules\Merchant\Domain\Enums\OutletStatus;
 use App\Modules\Merchant\Domain\Models\LegalEntity;
 use App\Modules\Merchant\Domain\Models\Merchant;
+use App\Modules\Merchant\Domain\Models\MerchantApplication;
 use App\Modules\Merchant\Domain\Models\MerchantCategory;
 use App\Modules\Merchant\Domain\Models\MerchantDocument;
 use App\Modules\Merchant\Domain\Models\MerchantIdentity;
@@ -22,7 +24,7 @@ it('creates a merchant that references a service and an owner', function () {
 
     expect($merchant->service_id)->toBe($serviceId)
         ->and($merchant->user_id)->toBe($userId)
-        ->and($merchant->status)->toBe(MerchantStatus::Draft);
+        ->and($merchant->status)->toBe(MerchantStatus::Inactive);
 });
 
 it('rejects a duplicate slug', function () {
@@ -86,25 +88,34 @@ it('enforces a one-to-one merchant identity', function () {
         ->toThrow(UniqueConstraintViolationException::class);
 });
 
-it('follows the merchant status transition rules', function () {
-    expect(MerchantStatus::Draft->canTransitionTo(MerchantStatus::Pending))->toBeTrue()
-        ->and(MerchantStatus::Pending->canTransitionTo(MerchantStatus::Active))->toBeTrue()
-        ->and(MerchantStatus::Pending->canTransitionTo(MerchantStatus::Rejected))->toBeTrue()
-        ->and(MerchantStatus::Rejected->canTransitionTo(MerchantStatus::Draft))->toBeTrue()
-        ->and(MerchantStatus::Rejected->canTransitionTo(MerchantStatus::Pending))->toBeTrue()
+it('follows the merchant operational status transition rules', function () {
+    expect(MerchantStatus::Inactive->canTransitionTo(MerchantStatus::Active))->toBeTrue()
         ->and(MerchantStatus::Active->canTransitionTo(MerchantStatus::Suspended))->toBeTrue()
         ->and(MerchantStatus::Suspended->canTransitionTo(MerchantStatus::Active))->toBeTrue()
-        ->and(MerchantStatus::Draft->canTransitionTo(MerchantStatus::Active))->toBeFalse()
-        ->and(MerchantStatus::Active->canTransitionTo(MerchantStatus::Rejected))->toBeFalse();
+        ->and(MerchantStatus::Active->canTransitionTo(MerchantStatus::Inactive))->toBeFalse()
+        ->and(MerchantStatus::Inactive->canTransitionTo(MerchantStatus::Suspended))->toBeFalse();
 });
 
-it('stores rejection metadata', function () {
-    $merchant = Merchant::factory()->rejected()->create([
-        'rejection_stage' => 'outlet',
-        'rejection_reason' => 'Alamat outlet tidak valid.',
-    ]);
+it('follows the application status transition rules', function () {
+    expect(MerchantApplicationStatus::Draft->canTransitionTo(MerchantApplicationStatus::Pending))->toBeTrue()
+        ->and(MerchantApplicationStatus::Pending->canTransitionTo(MerchantApplicationStatus::InReview))->toBeTrue()
+        ->and(MerchantApplicationStatus::InReview->canTransitionTo(MerchantApplicationStatus::RevisionRequired))->toBeTrue()
+        ->and(MerchantApplicationStatus::RevisionRequired->canTransitionTo(MerchantApplicationStatus::Pending))->toBeTrue()
+        ->and(MerchantApplicationStatus::InReview->canTransitionTo(MerchantApplicationStatus::Approved))->toBeTrue()
+        ->and(MerchantApplicationStatus::InReview->canTransitionTo(MerchantApplicationStatus::Rejected))->toBeTrue()
+        ->and(MerchantApplicationStatus::Approved->isTerminal())->toBeTrue()
+        ->and(MerchantApplicationStatus::Rejected->isTerminal())->toBeTrue()
+        ->and(MerchantApplicationStatus::Draft->isActive())->toBeTrue()
+        ->and(MerchantApplicationStatus::Approved->isActive())->toBeFalse();
+});
 
-    expect($merchant->status)->toBe(MerchantStatus::Rejected)
-        ->and($merchant->rejection_stage->value)->toBe('outlet')
-        ->and($merchant->rejection_reason)->toBe('Alamat outlet tidak valid.');
+it('allows only one active application per merchant', function () {
+    $merchant = Merchant::factory()->create();
+
+    MerchantApplication::factory()->forMerchant($merchant->id)->create();
+
+    expect(fn () => MerchantApplication::factory()
+        ->forMerchant($merchant->id)
+        ->create())
+        ->toThrow(UniqueConstraintViolationException::class);
 });

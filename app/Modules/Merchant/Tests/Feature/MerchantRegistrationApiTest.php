@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Merchant\Domain\Enums\MerchantApplicationStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantType;
 use App\Modules\Merchant\Domain\Enums\OutletStatus;
 use App\Modules\Merchant\Domain\Models\Merchant;
@@ -92,14 +93,16 @@ it('creates an empty draft registration for the authenticated user', function ()
 
     $this->postJson('/api/v1/merchants/registration')
         ->assertCreated()
-        ->assertJsonStructure(['data' => ['merchant_id', 'status']])
-        ->assertJsonPath('data.status', 'draft');
+        ->assertJsonStructure(['data' => ['merchant_id', 'merchant_status', 'application' => ['id', 'application_number', 'status']]])
+        ->assertJsonPath('data.merchant_status', 'inactive')
+        ->assertJsonPath('data.application.status', 'draft');
 
     $merchant = Merchant::query()->where('user_id', $user->id)->first();
 
     expect($merchant)->not->toBeNull()
         ->and($merchant->business_name)->toBeNull()
-        ->and($merchant->service_id)->toBeNull();
+        ->and($merchant->service_id)->toBeNull()
+        ->and($merchant->applications()->count())->toBe(1);
 });
 
 it('rejects a duplicate registration for the same user', function () {
@@ -546,12 +549,13 @@ it('returns a complete review payload with resolved cross-module data', function
 
     $this->getJson('/api/v1/merchants/registration/review')
         ->assertOk()
-        ->assertJsonPath('data.id', $merchant->id)
-        ->assertJsonPath('data.service.name', 'JAfood')
-        ->assertJsonPath('data.categories.0.name', 'Makanan')
-        ->assertJsonPath('data.outlets.0.geography.village', 'DESA')
-        ->assertJsonPath('data.payout_accounts.0.bank_name', 'Bank Test')
-        ->assertJsonPath('data.logo_url', 'https://storage.test/merchants/'.$merchant->id.'/logo/asset');
+        ->assertJsonPath('data.merchant.id', $merchant->id)
+        ->assertJsonPath('data.merchant.service.name', 'JAfood')
+        ->assertJsonPath('data.merchant.categories.0.name', 'Makanan')
+        ->assertJsonPath('data.merchant.outlets.0.geography.village', 'DESA')
+        ->assertJsonPath('data.merchant.payout_accounts.0.bank_name', 'Bank Test')
+        ->assertJsonPath('data.merchant.logo_url', 'https://storage.test/merchants/'.$merchant->id.'/logo/asset')
+        ->assertJsonPath('data.application.status', 'draft');
 });
 
 it('reports incomplete registrations on submit', function () {
@@ -589,14 +593,15 @@ it('submits a complete registration and transitions draft to pending', function 
 
     $this->postJson('/api/v1/merchants/registration/submit')
         ->assertOk()
-        ->assertJsonPath('data.status', 'pending');
+        ->assertJsonPath('data.application.status', 'pending');
 
-    expect($merchant->refresh()->status->value)->toBe('pending');
+    expect($merchant->refresh()->status->value)->toBe('inactive')
+        ->and($merchant->applications()->first()->status->value)->toBe('pending');
 
     // Double submit is idempotent and does not create a new merchant.
     $this->postJson('/api/v1/merchants/registration/submit')
         ->assertOk()
-        ->assertJsonPath('data.status', 'pending');
+        ->assertJsonPath('data.application.status', 'pending');
 
     expect(Merchant::query()->count())->toBe(1);
 });
@@ -604,7 +609,10 @@ it('submits a complete registration and transitions draft to pending', function 
 it('rejects mutations once the registration is no longer a draft', function () {
     $user = $this->plainUser();
     Sanctum::actingAs($user);
-    Merchant::factory()->blankDraft($user->id)->create(['status' => 'pending']);
+    $merchant = Merchant::factory()->blankDraft($user->id)->create();
+    $merchant->applications()->first()->update([
+        'status' => MerchantApplicationStatus::Pending,
+    ]);
 
     $this->patchJson('/api/v1/merchants/registration', ['business_name' => 'Nope'])
         ->assertStatus(409)

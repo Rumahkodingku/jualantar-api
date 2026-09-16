@@ -4,8 +4,10 @@ namespace App\Modules\Payout;
 
 use App\Modules\Payout\Contracts\PayoutAccountLookup;
 use App\Modules\Payout\Contracts\PayoutAccountProvisioning;
+use App\Modules\Payout\Contracts\PayoutAccountVerification;
 use App\Modules\Payout\Infrastructure\Repositories\EloquentPayoutAccountLookup;
 use App\Modules\Payout\Infrastructure\Repositories\EloquentPayoutAccountProvisioning;
+use App\Modules\Payout\Infrastructure\Repositories\EloquentPayoutAccountVerification;
 use Illuminate\Support\ServiceProvider;
 
 final class PayoutServiceProvider extends ServiceProvider
@@ -14,6 +16,7 @@ final class PayoutServiceProvider extends ServiceProvider
     {
         $this->app->bind(PayoutAccountLookup::class, EloquentPayoutAccountLookup::class);
         $this->app->bind(PayoutAccountProvisioning::class, EloquentPayoutAccountProvisioning::class);
+        $this->app->bind(PayoutAccountVerification::class, EloquentPayoutAccountVerification::class);
     }
 
     public function boot(): void

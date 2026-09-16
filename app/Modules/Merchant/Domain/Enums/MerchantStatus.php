@@ -2,13 +2,15 @@
 
 namespace App\Modules\Merchant\Domain\Enums;
 
+/**
+ * Operational state of a merchant. Approval lifecycle lives on
+ * MerchantApplicationStatus, never on the merchant itself.
+ */
 enum MerchantStatus: string
 {
-    case Draft = 'draft';
-    case Pending = 'pending';
+    case Inactive = 'inactive';
     case Active = 'active';
     case Suspended = 'suspended';
-    case Rejected = 'rejected';
 
     /**
      * The statuses this status may legally transition to.
@@ -18,9 +20,7 @@ enum MerchantStatus: string
     public function allowedTransitions(): array
     {
         return match ($this) {
-            self::Draft => [self::Pending],
-            self::Pending => [self::Active, self::Rejected],
-            self::Rejected => [self::Draft, self::Pending],
+            self::Inactive => [self::Active],
             self::Active => [self::Suspended],
             self::Suspended => [self::Active],
         };

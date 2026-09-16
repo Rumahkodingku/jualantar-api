@@ -25,9 +25,6 @@ class MerchantDetailResource extends JsonResource
             'status' => $this->status->value,
             'logo' => $this->logo,
             'logo_url' => $this->logo_url,
-            'rejection_stage' => $this->rejection_stage?->value,
-            'rejection_reason' => $this->rejection_reason,
-            'reviewed_at' => $this->reviewed_at?->toIso8601String(),
             'service' => $this->service === null ? null : [
                 'id' => $this->service->id,
                 'name' => $this->service->name,
@@ -37,11 +34,6 @@ class MerchantDetailResource extends JsonResource
                 'id' => $this->owner->id,
                 'email' => $this->owner->email,
                 'phone' => $this->owner->phone,
-            ],
-            'reviewer' => $this->reviewer === null ? null : [
-                'id' => $this->reviewer->id,
-                'email' => $this->reviewer->email,
-                'phone' => $this->reviewer->phone,
             ],
             'identity' => MerchantIdentityResource::make($this->whenLoaded('identity')),
             'legal_entity' => LegalEntityResource::make($this->whenLoaded('legalEntity')),

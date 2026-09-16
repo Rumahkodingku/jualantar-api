@@ -27,6 +27,11 @@ it('documents the module routes', function () {
         '/v1/auth/me',
         '/v1/customers/register',
         '/v1/users/{user}/roles',
+        '/v1/admin/merchant-approvals',
+        '/v1/admin/merchant-approvals/summary',
+        '/v1/admin/merchant-approvals/{approval}',
+        '/v1/admin/merchant-approvals/{approval}/claim',
+        '/v1/admin/merchant-approvals/{approval}/approve',
     ]);
 });
 

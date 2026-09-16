@@ -3,7 +3,6 @@
 namespace App\Modules\Merchant\Domain\Models;
 
 use App\Modules\Merchant\Database\Factories\MerchantFactory;
-use App\Modules\Merchant\Domain\Enums\MerchantRejectionStage;
 use App\Modules\Merchant\Domain\Enums\MerchantStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -28,10 +27,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'type',
     'logo',
     'status',
-    'rejection_stage',
-    'rejection_reason',
-    'reviewed_at',
-    'reviewed_by',
 ])]
 class Merchant extends Model
 {
@@ -79,6 +74,14 @@ class Merchant extends Model
     }
 
     /**
+     * @return HasMany<MerchantApplication, $this>
+     */
+    public function applications(): HasMany
+    {
+        return $this->hasMany(MerchantApplication::class);
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -86,8 +89,6 @@ class Merchant extends Model
         return [
             'type' => MerchantType::class,
             'status' => MerchantStatus::class,
-            'rejection_stage' => MerchantRejectionStage::class,
-            'reviewed_at' => 'datetime',
         ];
     }
 }

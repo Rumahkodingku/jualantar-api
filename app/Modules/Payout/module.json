@@ -7,6 +7,7 @@
     ],
     "exposes_contracts": [
         "App\\Modules\\Payout\\Contracts\\PayoutAccountLookup",
-        "App\\Modules\\Payout\\Contracts\\PayoutAccountProvisioning"
+        "App\\Modules\\Payout\\Contracts\\PayoutAccountProvisioning",
+        "App\\Modules\\Payout\\Contracts\\PayoutAccountVerification"
     ]
 }

@@ -101,7 +101,7 @@ it('filters merchants by status, type and service', function () {
     $service = $this->newService();
 
     Merchant::factory()->forService($service->id)->active()->create();
-    Merchant::factory()->company()->pending()->create();
+    Merchant::factory()->company()->inactive()->create();
 
     $this->getJson('/api/v1/merchants?status=active')
         ->assertOk()
@@ -139,7 +139,6 @@ it('shows a merchant detail with relations and cross-module data resolved', func
     $service = $this->newService(['name' => 'JAfood']);
     $category = $this->newServiceCategory(['service_id' => $service->id, 'name' => 'Makanan']);
     $owner = $this->plainUser();
-    $reviewer = $this->plainUser();
 
     $province = $this->newProvince(['name' => 'PROVINSI']);
     $regency = $this->newRegency(['province_id' => $province->id, 'name' => 'KABUPATEN']);
@@ -151,8 +150,6 @@ it('shows a merchant detail with relations and cross-module data resolved', func
     $merchant = Merchant::factory()->forService($service->id)->forUser($owner->id)->create([
         'legal_entity_id' => $legalEntity->id,
         'status' => MerchantStatus::Active,
-        'reviewed_by' => $reviewer->id,
-        'reviewed_at' => now(),
         'logo' => 'merchants/'.$owner->id.'/logo/asset',
     ]);
 
@@ -166,7 +163,6 @@ it('shows a merchant detail with relations and cross-module data resolved', func
         ->assertJsonPath('data.id', $merchant->id)
         ->assertJsonPath('data.service.name', 'JAfood')
         ->assertJsonPath('data.owner.id', $owner->id)
-        ->assertJsonPath('data.reviewer.id', $reviewer->id)
         ->assertJsonPath('data.legal_entity.id', $legalEntity->id)
         ->assertJsonPath('data.legal_entity.geography.village', 'DESA')
         ->assertJsonPath('data.categories.0.name', 'Makanan')
