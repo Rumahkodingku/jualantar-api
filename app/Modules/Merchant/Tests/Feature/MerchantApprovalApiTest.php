@@ -11,11 +11,53 @@ use App\Modules\Merchant\Domain\Models\MerchantCategory;
 use App\Modules\Merchant\Domain\Models\MerchantDocument;
 use App\Modules\Merchant\Domain\Models\MerchantIdentity;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
+use App\Modules\Storage\Contracts\DataTransferObjects\StoredObject;
+use App\Modules\Storage\Contracts\DataTransferObjects\TemporaryUpload;
+use App\Modules\Storage\Contracts\ObjectStorage;
+use Illuminate\Http\UploadedFile;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
     $this->seedRbac();
 });
+
+function fakeApprovalObjectStorage(): ObjectStorage
+{
+    return new class implements ObjectStorage
+    {
+        public function put(string $path, string $contents, string $contentType): StoredObject
+        {
+            throw new LogicException('Not used in this test.');
+        }
+
+        public function putFile(string $path, UploadedFile $file): StoredObject
+        {
+            throw new LogicException('Not used in this test.');
+        }
+
+        public function exists(string $path): bool
+        {
+            return true;
+        }
+
+        public function metadata(string $path): StoredObject
+        {
+            throw new LogicException('Not used in this test.');
+        }
+
+        public function delete(string $path): void {}
+
+        public function temporaryUrl(string $path, DateTimeInterface $expiresAt, array $options = []): string
+        {
+            return 'https://storage.test/'.$path;
+        }
+
+        public function temporaryUploadUrl(string $path, DateTimeInterface $expiresAt, string $contentType, array $options = []): TemporaryUpload
+        {
+            throw new LogicException('Not used in this test.');
+        }
+    };
+}
 
 /**
  * Drive the full registration flow so the application has a real snapshot and
@@ -39,6 +81,7 @@ function submittedMerchantApplication(): array
         'slug' => 'warung-approval',
         'type' => MerchantType::Individual,
         'service_id' => $service->id,
+        'logo' => "merchants/{$merchant->id}/logo/asset",
     ]);
 
     MerchantIdentity::factory()->create(['merchant_id' => $merchant->id]);
@@ -124,7 +167,10 @@ it('lists and filters the approval queue', function () {
     $this->getJson('/api/v1/admin/merchant-approvals')
         ->assertOk()
         ->assertJsonCount(1, 'data')
-        ->assertJsonPath('data.0.application.status', 'pending');
+        ->assertJsonPath('data.0.application.status', 'pending')
+        ->assertJsonPath('data.0.merchant.business_name', 'Warung Approval')
+        ->assertJsonPath('data.0.merchant.type', MerchantType::Individual->value)
+        ->assertJsonPath('data.0.merchant.service.name', 'JAfood');
 
     $this->getJson('/api/v1/admin/merchant-approvals?status=pending')
         ->assertOk()
@@ -148,14 +194,22 @@ it('lists and filters the approval queue', function () {
 });
 
 it('shows the approval detail with snapshot, reviews, revisions and events', function () {
-    ['approval' => $approval] = submittedMerchantApplication();
+    ['approval' => $approval, 'merchant' => $merchant, 'category' => $category, 'village' => $village] = submittedMerchantApplication();
     $this->actingAsSuperAdmin();
+    $this->app->bind(ObjectStorage::class, fn () => fakeApprovalObjectStorage());
+
+    $document = $merchant->documents()->firstOrFail();
 
     $this->getJson("/api/v1/admin/merchant-approvals/{$approval->id}")
         ->assertOk()
         ->assertJsonPath('data.id', $approval->id)
         ->assertJsonPath('data.application.status', 'pending')
         ->assertJsonPath('data.current_snapshot.version', 1)
+        ->assertJsonPath('data.current_snapshot.data.subjects.service.data.name', 'JAfood')
+        ->assertJsonPath('data.current_snapshot.data.subjects.merchant_category.0.data.name', $category->name)
+        ->assertJsonPath('data.current_snapshot.data.subjects.merchant_outlet.0.data.geography.village', $village->name)
+        ->assertJsonPath('data.current_snapshot.data.subjects.merchant.data.logo_url', 'https://storage.test/'.$merchant->logo)
+        ->assertJsonPath('data.current_snapshot.data.subjects.merchant_document.0.data.url', 'https://storage.test/'.$document->object_key)
         ->assertJsonCount(1, 'data.events');
 });
 
