@@ -90,6 +90,7 @@ function submittedMerchantApplication(): array
         'merchant_id' => $merchant->id,
         'village_id' => $village->id,
         'status' => OutletStatus::Active,
+        'photos' => ["merchants/{$merchant->id}/outlets/front.jpg"],
     ]);
     MerchantDocument::factory()->create(['merchant_id' => $merchant->id]);
     $payoutAccount = test()->newPayoutAccountForMerchant($merchant->id, ['bank_id' => $bank->id]);
@@ -208,6 +209,7 @@ it('shows the approval detail with snapshot, reviews, revisions and events', fun
         ->assertJsonPath('data.current_snapshot.data.subjects.service.data.name', 'JAfood')
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant_category.0.data.name', $category->name)
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant_outlet.0.data.geography.village', $village->name)
+        ->assertJsonPath('data.current_snapshot.data.subjects.merchant_outlet.0.data.photos_url.0', 'https://storage.test/merchants/'.$merchant->id.'/outlets/front.jpg')
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant.data.logo_url', 'https://storage.test/'.$merchant->logo)
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant_document.0.data.url', 'https://storage.test/'.$document->object_key)
         ->assertJsonCount(1, 'data.events');

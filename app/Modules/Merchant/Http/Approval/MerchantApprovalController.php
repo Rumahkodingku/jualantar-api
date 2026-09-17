@@ -242,6 +242,7 @@ class MerchantApprovalController extends Controller
 
         if (isset($subjects['merchant_outlet']) && is_array($subjects['merchant_outlet'])) {
             $subjects['merchant_outlet'] = $this->attachOutletGeography($subjects['merchant_outlet']);
+            $subjects['merchant_outlet'] = $this->attachOutletPhotoUrls($subjects['merchant_outlet']);
         }
 
         if (isset($subjects['legal_entity']) && is_array($subjects['legal_entity'])) {
@@ -359,6 +360,28 @@ class MerchantApprovalController extends Controller
             }
 
             $outlets[$index]['data']['geography'] = $this->geographyPayload($labels[(int) $villageId]);
+        }
+
+        return $outlets;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $outlets
+     * @return array<int, array<string, mixed>>
+     */
+    private function attachOutletPhotoUrls(array $outlets): array
+    {
+        foreach ($outlets as $index => $outlet) {
+            $photos = $outlet['data']['photos'] ?? null;
+
+            if (! is_array($photos)) {
+                continue;
+            }
+
+            $outlets[$index]['data']['photos_url'] = array_values(array_map(
+                fn (mixed $path): ?string => is_string($path) && $path !== '' ? $this->temporaryUrl($path) : null,
+                $photos,
+            ));
         }
 
         return $outlets;
