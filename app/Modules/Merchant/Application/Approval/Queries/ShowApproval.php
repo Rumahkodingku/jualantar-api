@@ -14,6 +14,7 @@ final class ShowApproval
      *     approval: MerchantApproval,
      *     merchant: Merchant,
      *     snapshot: MerchantApplicationSnapshot|null,
+     *     snapshots: Collection<int, MerchantApplicationSnapshot>,
      *     reviews: Collection<int, mixed>,
      *     revisions: Collection<int, mixed>,
      *     events: Collection<int, mixed>
@@ -23,15 +24,16 @@ final class ShowApproval
     {
         $approval->load(['application.merchant', 'reviews', 'revisions.items', 'events']);
 
-        $snapshot = MerchantApplicationSnapshot::query()
+        $snapshots = MerchantApplicationSnapshot::query()
             ->where('application_id', $approval->application_id)
             ->orderByDesc('version')
-            ->first();
+            ->get();
 
         return [
             'approval' => $approval,
             'merchant' => $approval->application->merchant,
-            'snapshot' => $snapshot,
+            'snapshot' => $snapshots->first(),
+            'snapshots' => $snapshots,
             'reviews' => $approval->reviews,
             'revisions' => $approval->revisions->sortByDesc('requested_at')->values(),
             'events' => $approval->events->sortBy('created_at')->values(),

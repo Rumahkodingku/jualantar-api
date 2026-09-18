@@ -14,6 +14,7 @@ use Illuminate\Support\Collection;
  *     approval: MerchantApproval,
  *     merchant: Merchant,
  *     snapshot: MerchantApplicationSnapshot|null,
+ *     snapshots: Collection<int, MerchantApplicationSnapshot>,
  *     reviews: Collection<int, mixed>,
  *     revisions: Collection<int, mixed>,
  *     events: Collection<int, mixed>
@@ -40,12 +41,8 @@ class MerchantApprovalDetailResource extends JsonResource
             'completed_at' => $approval->completed_at?->toIso8601String(),
             'decision' => $approval->decision?->value,
             'decision_reason' => $approval->decision_reason,
-            'current_snapshot' => $snapshot === null ? null : [
-                'id' => $snapshot->id,
-                'version' => $snapshot->version,
-                'submitted_at' => $snapshot->submitted_at?->toIso8601String(),
-                'data' => $snapshot->snapshot,
-            ],
+            'current_snapshot' => $snapshot === null ? null : MerchantApplicationSnapshotResource::make($snapshot),
+            'snapshots' => MerchantApplicationSnapshotResource::collection($this->resource['snapshots']),
             'reviews' => MerchantApprovalReviewResource::collection($this->resource['reviews']),
             'revisions' => MerchantApprovalRevisionResource::collection($this->resource['revisions']),
             'events' => MerchantApprovalEventResource::collection($this->resource['events']),

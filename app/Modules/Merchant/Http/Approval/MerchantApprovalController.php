@@ -78,7 +78,11 @@ class MerchantApprovalController extends Controller
     {
         $data = ($this->showApproval)($approval);
         $this->attachOwner($data['merchant']);
-        $this->enrichSnapshot($data['snapshot']);
+        $this->hydrateMerchantServices([$data['approval']]);
+
+        foreach ($data['snapshots'] as $snapshot) {
+            $this->enrichSnapshot($snapshot);
+        }
 
         return ApiResponse::success(new MerchantApprovalDetailResource($data));
     }

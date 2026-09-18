@@ -195,7 +195,7 @@ it('lists and filters the approval queue', function () {
 });
 
 it('shows the approval detail with snapshot, reviews, revisions and events', function () {
-    ['approval' => $approval, 'merchant' => $merchant, 'category' => $category, 'village' => $village] = submittedMerchantApplication();
+    ['approval' => $approval, 'merchant' => $merchant, 'service' => $service, 'category' => $category, 'village' => $village] = submittedMerchantApplication();
     $this->actingAsSuperAdmin();
     $this->app->bind(ObjectStorage::class, fn () => fakeApprovalObjectStorage());
 
@@ -205,7 +205,11 @@ it('shows the approval detail with snapshot, reviews, revisions and events', fun
         ->assertOk()
         ->assertJsonPath('data.id', $approval->id)
         ->assertJsonPath('data.application.status', 'pending')
+        ->assertJsonPath('data.merchant.service.name', 'JAfood')
+        ->assertJsonPath('data.merchant.service.slug', $service->slug)
         ->assertJsonPath('data.current_snapshot.version', 1)
+        ->assertJsonCount(1, 'data.snapshots')
+        ->assertJsonPath('data.snapshots.0.version', 1)
         ->assertJsonPath('data.current_snapshot.data.subjects.service.data.name', 'JAfood')
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant_category.0.data.name', $category->name)
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant_outlet.0.data.geography.village', $village->name)
@@ -213,6 +217,49 @@ it('shows the approval detail with snapshot, reviews, revisions and events', fun
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant.data.logo_url', 'https://storage.test/'.$merchant->logo)
         ->assertJsonPath('data.current_snapshot.data.subjects.merchant_document.0.data.url', 'https://storage.test/'.$document->object_key)
         ->assertJsonCount(1, 'data.events');
+});
+
+it('returns every snapshot version in the approval detail', function () {
+    ['approval' => $approval, 'application' => $application, 'owner' => $owner] = submittedMerchantApplication();
+    $this->actingAsSuperAdmin();
+    $this->app->bind(ObjectStorage::class, fn () => fakeApprovalObjectStorage());
+
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/claim")->assertOk();
+
+    $identity = approvalSubject($approval, 'merchant_identity');
+    $originalName = $identity['data']['full_name'];
+    $updatedName = 'Budi Santoso Updated';
+
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/revision", [
+        'note' => 'Fix identity.',
+        'items' => [[
+            'component' => 'identity',
+            'subject_type' => 'merchant_identity',
+            'subject_id' => $identity['subject_id'],
+            'reason' => 'KTP is unclear.',
+        ]],
+    ])->assertCreated();
+
+    Sanctum::actingAs($owner);
+    $this->putJson('/api/v1/merchants/registration/identity', [
+        'id_type' => 'ktp',
+        'id_number' => '6171xxxxxxxxxxxx',
+        'full_name' => $updatedName,
+    ])->assertOk();
+    $this->postJson('/api/v1/merchants/registration/submit')->assertOk();
+
+    $this->actingAsSuperAdmin();
+    $this->getJson("/api/v1/admin/merchant-approvals/{$approval->id}")
+        ->assertOk()
+        ->assertJsonCount(2, 'data.snapshots')
+        ->assertJsonPath('data.snapshots.0.version', 2)
+        ->assertJsonPath('data.snapshots.1.version', 1)
+        ->assertJsonPath('data.current_snapshot.version', 2)
+        ->assertJsonPath('data.snapshots.0.data.subjects.merchant_identity.data.full_name', $updatedName)
+        ->assertJsonPath('data.snapshots.1.data.subjects.merchant_identity.data.full_name', $originalName)
+        ->assertJsonPath('data.snapshots.1.data.subjects.service.data.name', 'JAfood');
+
+    expect($application->refresh()->snapshots()->count())->toBe(2);
 });
 
 it('claims a pending approval and moves the application to in_review', function () {
