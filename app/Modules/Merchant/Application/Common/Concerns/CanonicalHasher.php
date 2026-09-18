@@ -26,9 +26,9 @@ trait CanonicalHasher
         }
 
         if (array_is_list($value)) {
-            $items = array_map(fn(mixed $item): mixed => $this->canonicalize($item), $value);
+            $items = array_map(fn (mixed $item): mixed => $this->canonicalize($item), $value);
 
-            usort($items, fn(mixed $a, mixed $b): int => strcmp(
+            usort($items, fn (mixed $a, mixed $b): int => strcmp(
                 (string) json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                 (string) json_encode($b, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             ));
