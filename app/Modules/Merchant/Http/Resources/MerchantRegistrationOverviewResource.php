@@ -33,6 +33,7 @@ class MerchantRegistrationOverviewResource extends JsonResource
                 ? null
                 : MerchantApplicationResource::make($application),
             'revisions' => MerchantApprovalRevisionResource::collection($this->resource['revisions']),
+            'decision_reason' => $application?->approval?->decision_reason,
         ];
     }
 }

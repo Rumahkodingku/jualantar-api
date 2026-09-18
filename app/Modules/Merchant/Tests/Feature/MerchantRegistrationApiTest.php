@@ -81,6 +81,45 @@ function outletPayload(int $villageId, array $overrides = []): array
     ], $overrides);
 }
 
+/**
+ * Submit a complete registration and return the owner, merchant and application.
+ *
+ * @return array<string, mixed>
+ */
+function submittedRegistrationForReview(): array
+{
+    $user = test()->plainUser();
+    Sanctum::actingAs($user);
+
+    $merchant = Merchant::factory()->blankDraft($user->id)->create();
+    $service = test()->newService();
+    $category = test()->newServiceCategory(['service_id' => $service->id]);
+    $village = test()->newVillage();
+    $bank = test()->newBank();
+
+    $merchant->update([
+        'business_name' => 'Warung Borneo',
+        'slug' => 'warung-borneo',
+        'type' => MerchantType::Individual,
+        'service_id' => $service->id,
+    ]);
+
+    MerchantIdentity::factory()->create(['merchant_id' => $merchant->id]);
+    MerchantCategory::factory()->create(['merchant_id' => $merchant->id, 'category_id' => $category->id]);
+    MerchantOutlet::factory()->create([
+        'merchant_id' => $merchant->id,
+        'village_id' => $village->id,
+        'status' => OutletStatus::Active,
+    ]);
+    test()->newPayoutAccountForMerchant($merchant->id, ['bank_id' => $bank->id]);
+
+    test()->postJson('/api/v1/merchants/registration/submit')->assertOk();
+
+    $application = $merchant->applications()->firstOrFail();
+
+    return compact('user', 'merchant', 'application');
+}
+
 it('rejects a guest from accessing registration', function () {
     $this->getJson('/api/v1/merchants/registration')
         ->assertStatus(401)
@@ -556,6 +595,57 @@ it('returns a complete review payload with resolved cross-module data', function
         ->assertJsonPath('data.merchant.payout_accounts.0.bank_name', 'Bank Test')
         ->assertJsonPath('data.merchant.logo_url', 'https://storage.test/merchants/'.$merchant->id.'/logo/asset')
         ->assertJsonPath('data.application.status', 'draft');
+});
+
+it('exposes the revision note and per-component reasons on the review payload', function () {
+    ['user' => $user, 'application' => $application] = submittedRegistrationForReview();
+    $approval = $application->approval()->firstOrFail();
+
+    $this->seedRbac();
+    $this->actingAsSuperAdmin();
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/claim")->assertOk();
+
+    $identity = $application->snapshots()->orderByDesc('version')->firstOrFail()
+        ->snapshot['subjects']['merchant_identity'];
+
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/revision", [
+        'note' => 'Perbaiki identitas.',
+        'items' => [[
+            'component' => 'identity',
+            'subject_type' => 'merchant_identity',
+            'subject_id' => $identity['subject_id'],
+            'reason' => 'KTP kurang jelas.',
+        ]],
+    ])->assertCreated();
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/merchants/registration/review')
+        ->assertOk()
+        ->assertJsonPath('data.application.status', 'revision_required')
+        ->assertJsonPath('data.decision_reason', null)
+        ->assertJsonPath('data.revisions.0.note', 'Perbaiki identitas.')
+        ->assertJsonPath('data.revisions.0.items.0.component', 'identity')
+        ->assertJsonPath('data.revisions.0.items.0.reason', 'KTP kurang jelas.');
+});
+
+it('exposes the final rejection reason on the review payload', function () {
+    ['user' => $user, 'application' => $application] = submittedRegistrationForReview();
+    $approval = $application->approval()->firstOrFail();
+
+    $this->seedRbac();
+    $this->actingAsSuperAdmin();
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/claim")->assertOk();
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/reject", [
+        'reason' => 'Dokumen tidak valid.',
+    ])->assertOk();
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/v1/merchants/registration/review')
+        ->assertOk()
+        ->assertJsonPath('data.application.status', 'rejected')
+        ->assertJsonPath('data.decision_reason', 'Dokumen tidak valid.');
 });
 
 it('reports incomplete registrations on submit', function () {

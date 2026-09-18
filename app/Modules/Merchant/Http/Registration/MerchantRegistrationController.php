@@ -251,7 +251,7 @@ class MerchantRegistrationController extends Controller
 
         if ($application !== null) {
             $application->load('approval');
-            $revisions = $application->approval?->revisions()->latest('requested_at')->get() ?? collect();
+            $revisions = $application->approval?->revisions()->with('items')->latest('requested_at')->get() ?? collect();
         }
 
         return new MerchantRegistrationOverviewResource([

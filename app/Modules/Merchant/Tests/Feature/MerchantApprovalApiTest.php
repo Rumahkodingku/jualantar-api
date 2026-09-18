@@ -441,7 +441,40 @@ it('requests a revision and resets only the changed or rejected reviews', functi
 
     expect($application->refresh()->status)->toBe(MerchantApplicationStatus::Pending)
         ->and($identityReview->status->value)->toBe('pending')
-        ->and($serviceReview->status->value)->toBe('verified');
+        ->and($serviceReview->status->value)->toBe('verified')
+        ->and($approval->refresh()->assigned_to)->toBeNull();
+});
+
+it('allows a reviewer to claim the application again after resubmission', function () {
+    ['approval' => $approval, 'application' => $application, 'owner' => $owner] = submittedMerchantApplication();
+    $admin = $this->actingAsSuperAdmin();
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/claim")->assertOk();
+
+    $identity = approvalSubject($approval, 'merchant_identity');
+
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/revision", [
+        'note' => 'Fix identity.',
+        'items' => [[
+            'component' => 'identity',
+            'subject_type' => 'merchant_identity',
+            'subject_id' => $identity['subject_id'],
+            'reason' => 'KTP is unclear.',
+        ]],
+    ])->assertCreated();
+
+    Sanctum::actingAs($owner);
+    $this->postJson('/api/v1/merchants/registration/submit')->assertOk();
+
+    expect($application->refresh()->status)->toBe(MerchantApplicationStatus::Pending)
+        ->and($approval->refresh()->assigned_to)->toBeNull();
+
+    Sanctum::actingAs($admin);
+    $this->postJson("/api/v1/admin/merchant-approvals/{$approval->id}/claim")
+        ->assertOk()
+        ->assertJsonPath('data.assigned_to', $admin->id);
+
+    expect($application->refresh()->status)->toBe(MerchantApplicationStatus::InReview)
+        ->and($approval->refresh()->assigned_to)->toBe($admin->id);
 });
 
 it('creates a new application when a merchant re-applies after rejection', function () {

@@ -116,6 +116,12 @@ final class SubmitRegistration
             if ($isResubmit) {
                 $this->applyReviewReset($approval, $snapshot);
                 $this->resolveOpenRevisions($approval);
+
+                $approval->update([
+                    'assigned_to' => null,
+                    'assigned_at' => null,
+                    'started_at' => null,
+                ]);
             }
 
             $this->recordEvent(
