@@ -21,6 +21,7 @@ arch('module domain exceptions extend the base ApiException')
         'App\Modules\Storage\Domain\Exceptions',
         'App\Modules\IdentityAccess\Domain\Exceptions',
         'App\Modules\Merchant\Domain\Exceptions',
+        'App\Modules\Notifications\Domain\Exceptions',
         'App\Modules\Payout\Domain\Exceptions',
     ])
     ->toExtend(ApiException::class);
@@ -41,6 +42,7 @@ arch('the API response helper is only used by module controllers')
         'App\Modules\Merchant\Http\Approval',
         'App\Modules\Merchant\Http\Catalog',
         'App\Modules\Merchant\Http\Registration',
+        'App\Modules\Notifications\Http\Controllers',
         'App\Modules\Payout\Http\Controllers',
         'App\Modules\Service\Http\Controllers',
     ]);

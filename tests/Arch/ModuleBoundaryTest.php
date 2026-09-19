@@ -14,6 +14,7 @@ $modules = [
     'BankDirectory' => ['Domain', 'Application', 'Infrastructure'],
     'Service' => ['Domain', 'Application', 'Infrastructure'],
     'Merchant' => ['Domain', 'Application'],
+    'Notifications' => ['Domain', 'Application', 'Infrastructure'],
     'Payout' => ['Domain', 'Infrastructure'],
     'IdentityAccess' => ['Domain', 'Application', 'Infrastructure'],
     'Storage' => ['Domain', 'Infrastructure'],
@@ -31,6 +32,20 @@ foreach ($modules as $module => $layers) {
 arch('Shared Kernel tidak boleh bergantung ke modul bisnis mana pun')
     ->expect('App\Shared')
     ->not->toUse('App\Modules');
+
+arch('modul Notifications tidak boleh bergantung ke internal modul lain')
+    ->expect('App\Modules\Notifications')
+    ->not->toUse([
+        'App\Modules\BankDirectory',
+        'App\Modules\Customer',
+        'App\Modules\Geography',
+        'App\Modules\IdentityAccess',
+        'App\Modules\Merchant',
+        'App\Modules\Payout',
+        'App\Modules\Service',
+        'App\Modules\Storage',
+    ])
+    ->ignoring('Tests');
 
 arch('modul bisnis tidak boleh memakai internal Spatie Permission secara langsung')
     ->expect(['App\Modules\Customer', 'App\Modules\Geography', 'App\Modules\BankDirectory', 'App\Modules\Service', 'App\Modules\Merchant', 'App\Modules\Payout'])

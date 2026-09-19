@@ -1,0 +1,9 @@
+{
+    "name": "Notifications",
+    "description": "Persistent in-app notifications and recipient inbox management.",
+    "classification": "generic",
+    "depends_on": [],
+    "exposes_contracts": [
+        "App\\Modules\\Notifications\\Contracts\\Notifications"
+    ]
+}

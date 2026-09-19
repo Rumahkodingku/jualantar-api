@@ -64,6 +64,7 @@ return [
         'merchant_registration_already_exists' => ['status' => 409, 'title' => 'Conflict'],
         'merchant_application_not_found' => ['status' => 404, 'title' => 'Not Found'],
         'merchant_approval_not_found' => ['status' => 404, 'title' => 'Not Found'],
+        'notification_not_found' => ['status' => 404, 'title' => 'Not Found'],
         'invalid_registration_state' => ['status' => 409, 'title' => 'Conflict'],
         'invalid_state_transition' => ['status' => 409, 'title' => 'Conflict'],
         'not_assigned' => ['status' => 403, 'title' => 'Forbidden'],

@@ -5,6 +5,7 @@ use App\Modules\Customer\CustomerServiceProvider;
 use App\Modules\Geography\GeographyServiceProvider;
 use App\Modules\IdentityAccess\IdentityAccessServiceProvider;
 use App\Modules\Merchant\MerchantServiceProvider;
+use App\Modules\Notifications\NotificationsServiceProvider;
 use App\Modules\Payout\PayoutServiceProvider;
 use App\Modules\Service\ServiceServiceProvider;
 use App\Modules\Storage\StorageServiceProvider;
@@ -20,4 +21,5 @@ return [
     StorageServiceProvider::class,
     PayoutServiceProvider::class,
     MerchantServiceProvider::class,
+    NotificationsServiceProvider::class,
 ];
