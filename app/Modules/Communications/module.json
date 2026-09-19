@@ -1,0 +1,9 @@
+{
+    "name": "Communications",
+    "description": "Transactional out-of-app communication delivery.",
+    "classification": "generic",
+    "depends_on": [],
+    "exposes_contracts": [
+        "App\\Modules\\Communications\\Contracts\\Communications"
+    ]
+}

@@ -78,6 +78,13 @@ return [
         'rate_limited' => ['status' => 429, 'title' => 'Too Many Requests'],
         'internal_server_error' => ['status' => 500, 'title' => 'Internal Server Error'],
         'storage_error' => ['status' => 500, 'title' => 'Storage Error'],
+        'communication_invalid_recipient' => ['status' => 422, 'title' => 'Unprocessable Entity'],
+        'communication_template_not_found' => ['status' => 422, 'title' => 'Unprocessable Entity'],
+        'communication_provider_rejected' => ['status' => 422, 'title' => 'Unprocessable Entity'],
+        'communication_duplicate' => ['status' => 409, 'title' => 'Conflict'],
+        'communication_provider_unavailable' => ['status' => 503, 'title' => 'Service Unavailable'],
+        'communication_configuration_error' => ['status' => 500, 'title' => 'Internal Server Error'],
+        'communication_delivery_failed' => ['status' => 502, 'title' => 'Bad Gateway'],
     ],
 
     /*

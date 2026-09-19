@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\BankDirectory\BankDirectoryServiceProvider;
+use App\Modules\Communications\CommunicationsServiceProvider;
 use App\Modules\Customer\CustomerServiceProvider;
 use App\Modules\Geography\GeographyServiceProvider;
 use App\Modules\IdentityAccess\IdentityAccessServiceProvider;
@@ -22,4 +23,5 @@ return [
     PayoutServiceProvider::class,
     MerchantServiceProvider::class,
     NotificationsServiceProvider::class,
+    CommunicationsServiceProvider::class,
 ];

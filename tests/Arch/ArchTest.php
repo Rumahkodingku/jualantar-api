@@ -17,6 +17,7 @@ arch('module domain exceptions extend the base ApiException')
         'App\Modules\Customer\Domain\Exceptions',
         'App\Modules\Geography\Domain\Exceptions',
         'App\Modules\BankDirectory\Domain\Exceptions',
+        'App\Modules\Communications\Domain\Exceptions',
         'App\Modules\Service\Domain\Exceptions',
         'App\Modules\Storage\Domain\Exceptions',
         'App\Modules\IdentityAccess\Domain\Exceptions',

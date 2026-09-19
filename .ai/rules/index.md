@@ -4,6 +4,7 @@ Before planning or editing, find the row whose globs match the file's path and r
 
 | Applies to | Rule file |
 | --- | --- |
+| app/Modules/Communications/** | .ai/rules/communications.md |
 | app/Modules/**/Http/Controllers/** | .ai/rules/controllers.md |
 | app/Modules/Customer/** | .ai/rules/customer.md |
 | app/Modules/IdentityAccess/** | .ai/rules/identity-access.md |
