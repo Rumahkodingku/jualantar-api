@@ -2,7 +2,7 @@
 
 namespace App\Modules\Communications\Contracts\DataTransferObjects;
 
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 use DateTimeImmutable;
 
 final readonly class CommunicationResult

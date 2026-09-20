@@ -5,15 +5,16 @@ namespace App\Modules\Merchant\Application\Approval\Actions;
 use App\Modules\Merchant\Application\Common\Concerns\ManagesApprovalReviews;
 use App\Modules\Merchant\Application\Common\Concerns\RecordsApprovalEvents;
 use App\Modules\Merchant\Application\Common\Concerns\ReportsApprovalErrors;
+use App\Modules\Merchant\Application\Common\MerchantApprovalCommunicator;
 use App\Modules\Merchant\Domain\Enums\MerchantApplicationStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantApprovalEventType;
 use App\Modules\Merchant\Domain\Enums\MerchantApprovalRevisionStatus;
+use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\MerchantApplication;
 use App\Modules\Merchant\Domain\Models\MerchantApplicationSnapshot;
 use App\Modules\Merchant\Domain\Models\MerchantApproval;
 use App\Modules\Merchant\Domain\Models\MerchantApprovalRevision;
 use App\Modules\Merchant\Domain\Models\MerchantApprovalRevisionItem;
-use App\Modules\Merchant\Notifications\MerchantApprovalNotifier;
 use App\Shared\Result\Result;
 use Illuminate\Support\Facades\DB;
 
@@ -21,14 +22,14 @@ final class RequestRevision
 {
     use ManagesApprovalReviews, RecordsApprovalEvents, ReportsApprovalErrors;
 
-    public function __construct(private readonly MerchantApprovalNotifier $notifier) {}
+    public function __construct(private readonly MerchantApprovalCommunicator $communicator) {}
 
     /**
      * @param  list<array{component: string, subject_type: string, subject_id: string, reason: string}>  $items
      */
     public function __invoke(MerchantApproval $approval, string $actorId, ?string $note, array $items): Result
     {
-        return DB::transaction(function () use ($approval, $actorId, $note, $items): Result {
+        $result = DB::transaction(function () use ($approval, $actorId, $note, $items): Result {
             $locked = MerchantApproval::query()->whereKey($approval->id)->lockForUpdate()->firstOrFail();
             $application = MerchantApplication::query()
                 ->whereKey($locked->application_id)
@@ -87,10 +88,23 @@ final class RequestRevision
                 'items' => $items,
             ]);
 
-            $merchant = $application->merchant;
-            $this->notifier->revisionRequested($merchant, $application, $note);
-
             return Result::ok($revision->refresh());
         });
+
+        if ($result->isOk()) {
+            $this->communicate($approval, $note);
+        }
+
+        return $result;
+    }
+
+    private function communicate(MerchantApproval $approval, ?string $note): void
+    {
+        $application = MerchantApplication::query()->find($approval->application_id);
+        $merchant = $application?->merchant;
+
+        if ($application !== null && $merchant instanceof Merchant) {
+            $this->communicator->revisionRequested($merchant, $application, $note);
+        }
     }
 }

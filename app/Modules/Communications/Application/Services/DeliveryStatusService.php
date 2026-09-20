@@ -3,7 +3,7 @@
 namespace App\Modules\Communications\Application\Services;
 
 use App\Modules\Communications\Contracts\Channels\ProviderSendResult;
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 use App\Modules\Communications\Domain\Enums\DeliveryAttemptStatus;
 use App\Modules\Communications\Domain\Models\Communication;
 use App\Modules\Communications\Domain\Models\DeliveryAttempt;

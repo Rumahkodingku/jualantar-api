@@ -1,7 +1,11 @@
 <?php
 
-namespace App\Modules\Communications\Domain\Enums;
+namespace App\Modules\Communications\Contracts\Enums;
 
+/**
+ * Delivery lifecycle state. Part of the public contract surface so producers
+ * can read CommunicationResult without importing the Communications domain.
+ */
 enum CommunicationStatus: string
 {
     case Pending = 'pending';

@@ -2,7 +2,7 @@
 
 namespace App\Modules\Communications\Contracts\DataTransferObjects;
 
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
 
 final readonly class SendCommunicationData
 {

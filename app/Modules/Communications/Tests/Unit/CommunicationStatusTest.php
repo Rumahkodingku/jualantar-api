@@ -1,6 +1,6 @@
 <?php
 
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 
 it('follows the delivery status transition rules', function () {
     expect(CommunicationStatus::Pending->canTransitionTo(CommunicationStatus::Queued))->toBeTrue()

@@ -4,7 +4,7 @@ namespace App\Modules\Communications\Application\Services;
 
 use App\Modules\Communications\Contracts\Channels\Channel;
 use App\Modules\Communications\Contracts\Channels\ProviderSendResult;
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
 use App\Modules\Communications\Domain\Exceptions\CommunicationException;
 use App\Modules\Communications\Domain\Models\Communication;
 

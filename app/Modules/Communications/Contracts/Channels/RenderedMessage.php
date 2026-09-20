@@ -2,7 +2,7 @@
 
 namespace App\Modules\Communications\Contracts\Channels;
 
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
 
 /**
  * Channel-neutral, rendered outbound message.

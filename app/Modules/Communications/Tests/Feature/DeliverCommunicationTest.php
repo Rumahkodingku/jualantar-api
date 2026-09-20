@@ -4,7 +4,7 @@ use App\Modules\Communications\Application\Jobs\DeliverCommunication;
 use App\Modules\Communications\Application\Services\CommunicationDispatcher;
 use App\Modules\Communications\Application\Services\DeliveryStatusService;
 use App\Modules\Communications\Contracts\Channels\ProviderSendResult;
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 use App\Modules\Communications\Domain\Enums\DeliveryAttemptStatus;
 use App\Modules\Communications\Domain\Exceptions\CommunicationException;
 use App\Modules\Communications\Domain\Models\Communication;

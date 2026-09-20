@@ -1,29 +1,34 @@
 <?php
 
-namespace App\Modules\IdentityAccess\Notifications;
+namespace App\Modules\IdentityAccess\Infrastructure\Verification;
 
-use Illuminate\Auth\Notifications\VerifyEmail;
+use App\Modules\IdentityAccess\Domain\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\URL;
 
-class MerchantVerifyEmailNotification extends VerifyEmail
+/**
+ * Builds the email-verification URL for a user.
+ *
+ * IdentityAccess owns token/signature generation; Communications only
+ * transports the resulting URL (see the Communications PRD, link handling).
+ */
+final class VerificationUrlBuilder
 {
-    /**
-     * Build a verification link that lands on the merchant PWA while keeping
-     * the API signature intact. The frontend forwards the id/hash plus the
-     * expires/signature query params back to the signed API endpoint.
-     */
-    protected function verificationUrl($notifiable): string
+    public function forUser(User $user): string
     {
         $apiUrl = URL::temporarySignedRoute(
             'verification.verify',
             Carbon::now()->addMinutes((int) Config::get('auth.verification.expire', 60)),
             [
-                'id' => $notifiable->getKey(),
-                'hash' => sha1($notifiable->getEmailForVerification()),
+                'id' => $user->getKey(),
+                'hash' => sha1($user->getEmailForVerification()),
             ],
         );
+
+        if (! $user->hasRole('merchant')) {
+            return $apiUrl;
+        }
 
         $frontendBase = rtrim((string) config('merchant.app_url'), '/');
 
@@ -34,8 +39,8 @@ class MerchantVerifyEmailNotification extends VerifyEmail
         parse_str((string) parse_url($apiUrl, PHP_URL_QUERY), $query);
 
         return $frontendBase.'/merchant/verify-email?'.http_build_query([
-            'id' => $notifiable->getKey(),
-            'hash' => sha1($notifiable->getEmailForVerification()),
+            'id' => $user->getKey(),
+            'hash' => sha1($user->getEmailForVerification()),
             'expires' => $query['expires'] ?? null,
             'signature' => $query['signature'] ?? null,
         ]);

@@ -2,9 +2,9 @@
 
 namespace App\Modules\Communications\Domain\Models;
 
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 use App\Modules\Communications\Database\Factories\CommunicationFactory;
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;

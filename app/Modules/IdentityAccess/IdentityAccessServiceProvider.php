@@ -27,6 +27,7 @@ final class IdentityAccessServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
         $this->loadRoutesFrom(__DIR__.'/Routes/api.php');
+        $this->loadViewsFrom(__DIR__.'/Infrastructure/Templates', 'identityaccess');
 
         Gate::before(function ($user): ?bool {
             return $user->hasRole('super-admin') ? true : null;

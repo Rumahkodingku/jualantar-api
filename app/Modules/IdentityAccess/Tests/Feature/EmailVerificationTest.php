@@ -1,17 +1,19 @@
 <?php
 
+use App\Modules\Communications\Contracts\Communications;
 use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
 use App\Modules\IdentityAccess\Domain\Models\User;
-use Illuminate\Auth\Notifications\VerifyEmail;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Spatie\Permission\PermissionRegistrar;
+use Tests\Support\FakeCommunications;
 
 beforeEach(function () {
     $this->seed(RbacSeeder::class);
     app(PermissionRegistrar::class)->forgetCachedPermissions();
-    Notification::fake();
+
+    $this->communications = new FakeCommunications;
+    app()->instance(Communications::class, $this->communications);
 });
 
 function emailVerificationUrl(User $user, ?string $hash = null): string
@@ -69,13 +71,15 @@ it('rejects a verification link for a missing user', function () {
         ->assertJsonPath('code', 'invalid_verification');
 });
 
-it('resends the verification notification', function () {
+it('resends the verification communication', function () {
     $user = User::factory()->unverified()->create();
 
     $this->postJson('/api/v1/auth/email/verification-notification', ['email' => $user->email])
         ->assertStatus(202);
 
-    Notification::assertSentTo($user, VerifyEmail::class);
+    expect($this->communications->sent)->toHaveCount(1)
+        ->and($this->communications->last()->recipientAddress)->toBe($user->email)
+        ->and($this->communications->last()->type)->toBe('identity.email_verification');
 });
 
 it('does not resend for an already verified user', function () {
@@ -84,7 +88,7 @@ it('does not resend for an already verified user', function () {
     $this->postJson('/api/v1/auth/email/verification-notification', ['email' => $user->email])
         ->assertStatus(202);
 
-    Notification::assertNothingSent();
+    expect($this->communications->sent)->toBeEmpty();
 });
 
 it('rate limits verification resend', function () {

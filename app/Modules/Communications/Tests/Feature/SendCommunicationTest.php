@@ -3,8 +3,8 @@
 use App\Modules\Communications\Application\Jobs\DeliverCommunication;
 use App\Modules\Communications\Contracts\Communications;
 use App\Modules\Communications\Contracts\DataTransferObjects\SendCommunicationData;
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 use App\Modules\Communications\Domain\Exceptions\CommunicationException;
 use App\Modules\Communications\Domain\Models\Communication;
 use Illuminate\Foundation\Testing\RefreshDatabase;

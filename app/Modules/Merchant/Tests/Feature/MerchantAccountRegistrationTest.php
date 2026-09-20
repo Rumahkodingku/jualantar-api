@@ -1,12 +1,14 @@
 <?php
 
-use App\Modules\IdentityAccess\Notifications\MerchantVerifyEmailNotification;
-use Illuminate\Support\Facades\Notification;
+use App\Modules\Communications\Contracts\Communications;
+use Tests\Support\FakeCommunications;
 
 beforeEach(function () {
     $this->seedRbac();
     config(['merchant.app_url' => 'https://merchant.test']);
-    Notification::fake();
+
+    $this->communications = new FakeCommunications;
+    app()->instance(Communications::class, $this->communications);
 });
 
 /**
@@ -38,16 +40,15 @@ it('registers a merchant account, assigns the role and sends verification', func
         ->and($user->email_verified_at)->toBeNull()
         ->and($user->phone)->toBe('+6281234567890');
 
-    Notification::assertSentTo(
-        $user,
-        MerchantVerifyEmailNotification::class,
-        function (MerchantVerifyEmailNotification $notification) use ($user): bool {
-            $mail = $notification->toMail($user);
+    $sent = $this->communications->last();
 
-            return str_contains($mail->actionUrl, 'https://merchant.test/merchant/verify-email')
-                && str_contains($mail->actionUrl, 'signature=');
-        },
-    );
+    expect($sent)->not->toBeNull()
+        ->and($sent->type)->toBe('identity.email_verification')
+        ->and($sent->template)->toBe('email.identity.email-verification')
+        ->and($sent->recipientAddress)->toBe('merchant@example.com')
+        ->and($sent->payload['verification_url'])
+        ->toContain('https://merchant.test/merchant/verify-email')
+        ->toContain('signature=');
 });
 
 it('rejects a duplicate email', function () {

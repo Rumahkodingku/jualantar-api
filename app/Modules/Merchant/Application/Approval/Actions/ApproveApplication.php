@@ -5,6 +5,7 @@ namespace App\Modules\Merchant\Application\Approval\Actions;
 use App\Modules\Merchant\Application\Common\Concerns\RecordsApprovalEvents;
 use App\Modules\Merchant\Application\Common\Concerns\RegistrationRequirements;
 use App\Modules\Merchant\Application\Common\Concerns\ReportsApprovalErrors;
+use App\Modules\Merchant\Application\Common\MerchantApprovalCommunicator;
 use App\Modules\Merchant\Domain\Enums\MerchantApplicationStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantApprovalDecision;
 use App\Modules\Merchant\Domain\Enums\MerchantApprovalEventType;
@@ -15,7 +16,6 @@ use App\Modules\Merchant\Domain\Models\MerchantApplication;
 use App\Modules\Merchant\Domain\Models\MerchantApplicationSnapshot;
 use App\Modules\Merchant\Domain\Models\MerchantApproval;
 use App\Modules\Merchant\Domain\Models\MerchantApprovalReview;
-use App\Modules\Merchant\Notifications\MerchantApprovalNotifier;
 use App\Shared\Result\Result;
 use Illuminate\Support\Facades\DB;
 
@@ -23,11 +23,11 @@ final class ApproveApplication
 {
     use RecordsApprovalEvents, RegistrationRequirements, ReportsApprovalErrors;
 
-    public function __construct(private readonly MerchantApprovalNotifier $notifier) {}
+    public function __construct(private readonly MerchantApprovalCommunicator $communicator) {}
 
     public function __invoke(MerchantApproval $approval, string $actorId): Result
     {
-        return DB::transaction(function () use ($approval, $actorId): Result {
+        $result = DB::transaction(function () use ($approval, $actorId): Result {
             $locked = MerchantApproval::query()->whereKey($approval->id)->lockForUpdate()->firstOrFail();
             $application = MerchantApplication::query()
                 ->whereKey($locked->application_id)
@@ -77,10 +77,24 @@ final class ApproveApplication
                 'application_id' => $application->id,
             ]);
 
-            $this->notifier->approved($merchant, $application);
-
             return Result::ok($locked->refresh());
         });
+
+        if ($result->isOk()) {
+            $this->communicate($approval);
+        }
+
+        return $result;
+    }
+
+    private function communicate(MerchantApproval $approval): void
+    {
+        $application = MerchantApplication::query()->find($approval->application_id);
+        $merchant = $application?->merchant;
+
+        if ($application !== null && $merchant instanceof Merchant) {
+            $this->communicator->approved($merchant, $application);
+        }
     }
 
     /**

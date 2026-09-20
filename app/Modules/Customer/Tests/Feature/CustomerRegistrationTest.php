@@ -1,13 +1,15 @@
 <?php
 
+use App\Modules\Communications\Contracts\Communications;
 use App\Modules\Customer\Application\Actions\RegisterCustomer;
 use App\Modules\Customer\Domain\Models\Customer;
-use Illuminate\Auth\Notifications\VerifyEmail;
-use Illuminate\Support\Facades\Notification;
+use Tests\Support\FakeCommunications;
 
 beforeEach(function () {
     $this->seedRbac();
-    Notification::fake();
+
+    $this->communications = new FakeCommunications;
+    app()->instance(Communications::class, $this->communications);
 });
 
 function customerRegistrationPayload(array $overrides = []): array
@@ -38,7 +40,9 @@ it('registers a customer, creates the profile, assigns the role and sends verifi
 
     expect(Customer::where('user_id', $user->id)->where('username', 'thomas')->exists())->toBeTrue();
 
-    Notification::assertSentTo($user, VerifyEmail::class);
+    expect($this->communications->sent)->toHaveCount(1)
+        ->and($this->communications->last()->recipientAddress)->toBe('customer@example.com')
+        ->and($this->communications->last()->type)->toBe('identity.email_verification');
 });
 
 it('rejects a duplicate email', function () {

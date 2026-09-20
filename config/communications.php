@@ -57,6 +57,6 @@ return [
     |
     */
 
-    'templates' => ['communications'],
+    'templates' => ['communications', 'identityaccess', 'merchant'],
 
 ];

@@ -4,7 +4,7 @@ namespace App\Modules\Communications\Application\Jobs;
 
 use App\Modules\Communications\Application\Services\CommunicationDispatcher;
 use App\Modules\Communications\Application\Services\DeliveryStatusService;
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 use App\Modules\Communications\Domain\Exceptions\CommunicationException;
 use App\Modules\Communications\Domain\Exceptions\PermanentDeliveryFailureException;
 use App\Modules\Communications\Domain\Models\Communication;

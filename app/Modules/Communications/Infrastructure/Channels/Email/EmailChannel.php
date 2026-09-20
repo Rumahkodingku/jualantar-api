@@ -5,7 +5,7 @@ namespace App\Modules\Communications\Infrastructure\Channels\Email;
 use App\Modules\Communications\Contracts\Channels\Channel;
 use App\Modules\Communications\Contracts\Channels\ProviderSendResult;
 use App\Modules\Communications\Contracts\Channels\RenderedMessage;
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
 
 final class EmailChannel implements Channel
 {

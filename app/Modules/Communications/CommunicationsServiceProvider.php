@@ -7,7 +7,7 @@ use App\Modules\Communications\Application\Services\CommunicationRenderer;
 use App\Modules\Communications\Application\Services\EloquentCommunications;
 use App\Modules\Communications\Contracts\Channels\Channel;
 use App\Modules\Communications\Contracts\Communications;
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
 use App\Modules\Communications\Infrastructure\Channels\Email\EmailChannel;
 use App\Modules\Communications\Infrastructure\Channels\Email\EmailProvider;
 use App\Modules\Communications\Infrastructure\Providers\Smtp\SmtpEmailProvider;

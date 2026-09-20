@@ -2,8 +2,8 @@
 
 namespace App\Modules\Communications\Database\Factories;
 
-use App\Modules\Communications\Domain\Enums\CommunicationChannel;
-use App\Modules\Communications\Domain\Enums\CommunicationStatus;
+use App\Modules\Communications\Contracts\Enums\CommunicationChannel;
+use App\Modules\Communications\Contracts\Enums\CommunicationStatus;
 use App\Modules\Communications\Domain\Models\Communication;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

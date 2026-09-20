@@ -2,7 +2,9 @@
     "name": "IdentityAccess",
     "description": "Autentikasi, identitas, role, permission, dan authorization pengguna.",
     "classification": "generic",
-    "depends_on": [],
+    "depends_on": [
+        "Communications"
+    ],
     "exposes_contracts": [
         "App\\Modules\\IdentityAccess\\Contracts\\Authorization",
         "App\\Modules\\IdentityAccess\\Contracts\\UserLookup",

@@ -1,7 +1,11 @@
 <?php
 
-namespace App\Modules\Communications\Domain\Enums;
+namespace App\Modules\Communications\Contracts\Enums;
 
+/**
+ * Delivery medium. Part of the public contract surface so producers can select
+ * a channel without importing the Communications domain.
+ */
 enum CommunicationChannel: string
 {
     case Email = 'email';
