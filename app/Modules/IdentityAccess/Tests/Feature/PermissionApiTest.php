@@ -43,9 +43,14 @@ it('filters permissions by search term', function () {
     $superAdmin = User::factory()->superAdmin()->create();
     Sanctum::actingAs($superAdmin);
 
+    $expected = count(array_filter(
+        RbacSeeder::PERMISSIONS,
+        fn (string $permission): bool => str_contains($permission, 'users.'),
+    ));
+
     $this->getJson('/api/v1/permissions?search=users.')
         ->assertOk()
-        ->assertJsonCount(4, 'data');
+        ->assertJsonCount($expected, 'data');
 });
 
 it('shows a single permission', function () {

@@ -3,6 +3,7 @@
 use App\Modules\Merchant\Domain\Enums\MerchantApplicationStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantStatus;
 use App\Modules\Merchant\Domain\Enums\OutletStatus;
+use App\Modules\Merchant\Domain\Enums\OutletUserRole;
 use App\Modules\Merchant\Domain\Models\LegalEntity;
 use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\MerchantApplication;
@@ -94,6 +95,15 @@ it('follows the merchant operational status transition rules', function () {
         ->and(MerchantStatus::Suspended->canTransitionTo(MerchantStatus::Active))->toBeTrue()
         ->and(MerchantStatus::Active->canTransitionTo(MerchantStatus::Inactive))->toBeFalse()
         ->and(MerchantStatus::Inactive->canTransitionTo(MerchantStatus::Suspended))->toBeFalse();
+});
+
+it('follows the outlet status transition rules', function () {
+    expect(OutletStatus::Active->canTransitionTo(OutletStatus::Inactive))->toBeTrue()
+        ->and(OutletStatus::Inactive->canTransitionTo(OutletStatus::Active))->toBeTrue();
+});
+
+it('exposes the supported outlet user roles', function () {
+    expect(OutletUserRole::values())->toBe(['outlet_manager', 'outlet_staff']);
 });
 
 it('follows the application status transition rules', function () {

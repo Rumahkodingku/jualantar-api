@@ -43,6 +43,28 @@ it('returns false for a village that does not exist', function () {
     expect(app(GeographyLookup::class)->villageExists(999999))->toBeFalse();
 });
 
+it('reports a region as existing per level only when active', function () {
+    $lookup = app(GeographyLookup::class);
+    ['province' => $province, 'regency' => $regency, 'district' => $district, 'village' => $village] = geographyChain();
+
+    expect($lookup->regionExists('province', $province->id))->toBeTrue()
+        ->and($lookup->regionExists('regency', $regency->id))->toBeTrue()
+        ->and($lookup->regionExists('district', $district->id))->toBeTrue()
+        ->and($lookup->regionExists('village', $village->id))->toBeTrue();
+
+    $province->update(['is_active' => false]);
+
+    expect($lookup->regionExists('province', $province->id))->toBeFalse()
+        ->and($lookup->regionExists('regency', $regency->id))->toBeFalse()
+        ->and($lookup->regionExists('district', $district->id))->toBeFalse()
+        ->and($lookup->regionExists('village', $village->id))->toBeFalse();
+});
+
+it('returns false for unknown levels and missing regions', function () {
+    expect(app(GeographyLookup::class)->regionExists('galaxy', 1))->toBeFalse()
+        ->and(app(GeographyLookup::class)->regionExists('province', 999999))->toBeFalse();
+});
+
 it('resolves an address label even when the region is inactive', function () {
     $lookup = app(GeographyLookup::class);
     ['province' => $province, 'regency' => $regency, 'district' => $district, 'village' => $village] = geographyChain();

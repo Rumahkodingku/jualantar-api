@@ -24,6 +24,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'business_name',
     'slug',
     'description',
+    'operational_phone',
+    'operational_email',
+    'website',
     'type',
     'logo',
     'status',
@@ -71,6 +74,14 @@ class Merchant extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(MerchantDocument::class);
+    }
+
+    /**
+     * @return HasMany<MerchantOutletUser, $this>
+     */
+    public function outletUsers(): HasMany
+    {
+        return $this->hasMany(MerchantOutletUser::class);
     }
 
     /**

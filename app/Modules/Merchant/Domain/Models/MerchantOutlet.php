@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Table('merchant.merchant_outlets')]
 #[UseFactory(MerchantOutletFactory::class)]
@@ -45,6 +46,14 @@ class MerchantOutlet extends Model
     public function merchant(): BelongsTo
     {
         return $this->belongsTo(Merchant::class);
+    }
+
+    /**
+     * @return HasMany<MerchantOutletUser, $this>
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(MerchantOutletUser::class, 'outlet_id');
     }
 
     /**

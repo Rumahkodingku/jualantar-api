@@ -36,8 +36,8 @@ class MerchantOutletFactory extends Factory
             'service_area_type' => OutletServiceAreaType::Radius,
             'service_radius_km' => fake()->randomFloat(2, 1, 25),
             'operating_hours' => [
-                'monday' => [['open' => '08:00', 'close' => '17:00']],
-                'tuesday' => [['open' => '08:00', 'close' => '17:00']],
+                'monday' => ['is_open' => true, 'open' => '08:00', 'close' => '17:00'],
+                'tuesday' => ['is_open' => true, 'open' => '08:00', 'close' => '17:00'],
             ],
             'status' => OutletStatus::Active,
         ];

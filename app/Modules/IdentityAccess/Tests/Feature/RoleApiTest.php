@@ -37,7 +37,7 @@ it('lists roles with their permissions for a super-admin', function () {
 
     $this->getJson('/api/v1/roles')
         ->assertOk()
-        ->assertJsonPath('meta.total', 4)
+        ->assertJsonPath('meta.total', count(RbacSeeder::ROLE_PERMISSIONS))
         ->assertJsonStructure([
             'data' => [['id', 'name', 'guard_name', 'permissions', 'created_at', 'updated_at']],
             'meta' => ['current_page', 'per_page', 'total', 'last_page'],

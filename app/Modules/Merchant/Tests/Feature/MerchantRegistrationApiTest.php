@@ -76,7 +76,7 @@ function outletPayload(int $villageId, array $overrides = []): array
         'service_area_type' => 'radius',
         'service_radius_km' => 5,
         'operating_hours' => [
-            'monday' => [['open' => '08:00', 'close' => '17:00']],
+            'monday' => ['is_open' => true, 'open' => '08:00', 'close' => '17:00'],
         ],
     ], $overrides);
 }
@@ -343,7 +343,7 @@ it('creates, updates and deletes outlets while validating geography and operatin
         ->assertJsonPath('code', 'invalid_geography');
 
     $this->postJson('/api/v1/merchants/registration/outlets', outletPayload($village->id, [
-        'operating_hours' => ['monday' => [['open' => '8am', 'close' => '17:00']]],
+        'operating_hours' => ['monday' => ['is_open' => true, 'open' => '8am', 'close' => '17:00']],
     ]))
         ->assertStatus(422)
         ->assertJsonPath('code', 'validation_error');
@@ -352,6 +352,37 @@ it('creates, updates and deletes outlets while validating geography and operatin
         ->assertNoContent();
 
     expect(MerchantOutlet::query()->count())->toBe(0);
+});
+
+it('requires open and close times for open operating hours days', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    Merchant::factory()->blankDraft($user->id)->create();
+
+    $village = $this->newVillage();
+
+    $this->postJson('/api/v1/merchants/registration/outlets', outletPayload($village->id, [
+        'operating_hours' => ['monday' => ['is_open' => true]],
+    ]))
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'validation_error');
+});
+
+it('accepts closed operating hours days without times', function () {
+    $user = $this->plainUser();
+    Sanctum::actingAs($user);
+    Merchant::factory()->blankDraft($user->id)->create();
+
+    $village = $this->newVillage();
+
+    $this->postJson('/api/v1/merchants/registration/outlets', outletPayload($village->id, [
+        'operating_hours' => [
+            'monday' => ['is_open' => true, 'open' => '08:00', 'close' => '17:00'],
+            'sunday' => ['is_open' => false],
+        ],
+    ]))
+        ->assertCreated()
+        ->assertJsonPath('data.outlets.0.operating_hours.sunday.is_open', false);
 });
 
 it('issues a presigned upload for outlet photos under the outlets folder', function () {

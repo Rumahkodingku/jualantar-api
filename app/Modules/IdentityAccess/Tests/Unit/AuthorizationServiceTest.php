@@ -37,6 +37,32 @@ it('reports whether a user has a permission', function () {
         ->and($authorization->userHasPermission($missingUserId, 'deliveries.view'))->toBeFalse();
 });
 
+it('assigns and removes a role for an existing user', function () {
+    $user = User::factory()->create();
+    $authorization = new SpatieAuthorization;
+
+    expect($authorization->userHasRole($user->id, 'outlet_staff'))->toBeFalse();
+
+    $authorization->assignRole($user->id, 'outlet_staff');
+    expect($authorization->userHasRole($user->id, 'outlet_staff'))->toBeTrue();
+
+    $authorization->removeRole($user->id, 'outlet_staff');
+    expect($authorization->userHasRole($user->id, 'outlet_staff'))->toBeFalse();
+});
+
+it('ignores role changes for missing users and unknown roles', function () {
+    $missingUserId = '00000000-0000-0000-0000-000000000000';
+    $authorization = new SpatieAuthorization;
+
+    $authorization->assignRole($missingUserId, 'outlet_staff');
+
+    $user = User::factory()->create();
+    $authorization->assignRole($user->id, 'does-not-exist');
+    $authorization->removeRole($user->id, 'does-not-exist');
+
+    expect($authorization->userHasRole($user->id, 'does-not-exist'))->toBeFalse();
+});
+
 it('binds the authorization contract to the Spatie implementation', function () {
     expect(app(Authorization::class))->toBeInstanceOf(SpatieAuthorization::class);
 });

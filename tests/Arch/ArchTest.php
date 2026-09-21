@@ -42,6 +42,7 @@ arch('the API response helper is only used by module controllers')
         'App\Modules\Merchant\Http\Account',
         'App\Modules\Merchant\Http\Approval',
         'App\Modules\Merchant\Http\Catalog',
+        'App\Modules\Merchant\Http\Operations',
         'App\Modules\Merchant\Http\Registration',
         'App\Modules\Notifications\Http\Controllers',
         'App\Modules\Payout\Http\Controllers',
@@ -53,4 +54,17 @@ arch('problem details are only produced by the response helper and factory')
     ->toOnlyBeUsedIn([
         ProblemDetailsFactory::class,
         ApiResponse::class,
+    ]);
+
+arch('merchant operations depend on cross-module contracts, never internals')
+    ->expect([
+        'App\Modules\Merchant\Application\Operations',
+        'App\Modules\Merchant\Http\Operations',
+    ])
+    ->not->toUse([
+        'App\Modules\IdentityAccess\Domain',
+        'App\Modules\Geography\Domain',
+        'App\Modules\Storage\Domain',
+        'App\Modules\Storage\Infrastructure',
+        'Spatie\Permission',
     ]);

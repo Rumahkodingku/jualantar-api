@@ -38,4 +38,36 @@ final class SpatieAuthorization implements Authorization
             return false;
         }
     }
+
+    public function assignRole(int|string $userId, string $role): void
+    {
+        $user = User::find($userId);
+
+        if ($user === null) {
+            return;
+        }
+
+        try {
+            $user->assignRole($role);
+        } catch (RoleDoesNotExist) {
+            // An unknown role is a configuration error, not a caller error.
+        }
+    }
+
+    public function removeRole(int|string $userId, string $role): void
+    {
+        $user = User::find($userId);
+
+        if ($user === null) {
+            return;
+        }
+
+        try {
+            if ($user->hasRole($role)) {
+                $user->removeRole($role);
+            }
+        } catch (RoleDoesNotExist) {
+            // Nothing to revoke when the role is not configured.
+        }
+    }
 }

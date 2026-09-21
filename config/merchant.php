@@ -28,4 +28,18 @@ return [
 
     'application_url' => env('MERCHANT_APPLICATION_URL'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Operations
+    |--------------------------------------------------------------------------
+    |
+    | Operating hours are local times. Until per-outlet timezones exist (P1),
+    | availability is resolved against this single business timezone.
+    |
+    */
+
+    'operations' => [
+        'timezone' => env('MERCHANT_OPERATIONS_TIMEZONE', 'Asia/Jakarta'),
+    ],
+
 ];

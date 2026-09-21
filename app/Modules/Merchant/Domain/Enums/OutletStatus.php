@@ -8,6 +8,24 @@ enum OutletStatus: string
     case Inactive = 'inactive';
 
     /**
+     * Outlets can move freely between active and inactive.
+     *
+     * @return list<self>
+     */
+    public function allowedTransitions(): array
+    {
+        return match ($this) {
+            self::Active => [self::Inactive],
+            self::Inactive => [self::Active],
+        };
+    }
+
+    public function canTransitionTo(self $status): bool
+    {
+        return in_array($status, $this->allowedTransitions(), true);
+    }
+
+    /**
      * @return list<string>
      */
     public static function values(): array

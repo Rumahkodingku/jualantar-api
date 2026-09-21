@@ -9,9 +9,11 @@ Before planning or editing, find the row whose globs match the file's path and r
 | app/Modules/Customer/** | .ai/rules/customer.md |
 | app/Modules/{IdentityAccess,Merchant}/** | .ai/rules/identity-access-merchant.md |
 | app/Modules/IdentityAccess/** | .ai/rules/identity-access.md |
+| app/Modules/Merchant/** | .ai/rules/merchant.md |
 | app/Modules/*/Database/Migrations/** | .ai/rules/migrations.md |
 | app/Modules/**, app/Modules/*/*ServiceProvider.php | .ai/rules/modules.md |
 | app/Modules/Notifications/** | .ai/rules/notifications.md |
+| app/Modules/Merchant/Application/Operations/** | .ai/rules/operations.md |
 | app/Modules/Payout/** | .ai/rules/payout.md |
 | app/Modules/**/Http/Requests/*.php, app/Modules/**/Http/Requests/** | .ai/rules/requests.md |
 | app/Modules/*/Tests/** | .ai/rules/tests.md |
