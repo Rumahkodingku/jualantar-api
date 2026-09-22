@@ -62,6 +62,9 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
         Route::patch('/profile', [MerchantOperationsController::class, 'updateProfile'])
             ->middleware('permission:merchant.operations.profile.update,sanctum')->name('profile.update');
 
+        Route::post('/uploads', [MerchantOperationsController::class, 'storeUpload'])
+            ->middleware('permission:merchant.operations.view,sanctum')->name('uploads.store');
+
         Route::get('/outlets', [OutletOperationsController::class, 'index'])
             ->middleware('permission:merchant.operations.outlets.view,sanctum')->name('outlets.index');
         Route::post('/outlets', [OutletOperationsController::class, 'store'])
@@ -91,6 +94,10 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
         Route::delete('/outlets/{outlet}/users/{user}', [OutletUsersController::class, 'destroy'])
             ->whereUuid('outlet')->whereUuid('user')
             ->middleware('permission:merchant.operations.outlet_users.remove,sanctum')->name('outlets.users.destroy');
+
+        Route::post('/outlets/{outlet}/employees', [OutletUsersController::class, 'storeEmployee'])
+            ->whereUuid('outlet')
+            ->middleware('permission:merchant.operations.outlet_users.assign,sanctum')->name('outlets.employees.store');
 
         Route::get('/outlets/{outlet}/operating-hours', [OperatingHoursController::class, 'show'])
             ->whereUuid('outlet')

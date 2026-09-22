@@ -18,6 +18,16 @@ trait ReportsOperationsErrors
         ));
     }
 
+    private function forbidden(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'forbidden',
+            message: 'You do not have the capability required for this action.',
+            status: 403,
+            title: 'Forbidden',
+        ));
+    }
+
     private function outletNotFound(): Result
     {
         return Result::err(new ResultError(

@@ -5,12 +5,14 @@ namespace App\Modules\Merchant\Http\Operations;
 use App\Modules\IdentityAccess\Contracts\UserLookup;
 use App\Modules\Merchant\Application\Operations\Actions\AssignOutletUser;
 use App\Modules\Merchant\Application\Operations\Actions\ChangeOutletUserRole;
+use App\Modules\Merchant\Application\Operations\Actions\CreateOutletEmployee;
 use App\Modules\Merchant\Application\Operations\Actions\RemoveOutletUser;
 use App\Modules\Merchant\Application\Operations\Services\MerchantOperationsAuthorization;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
 use App\Modules\Merchant\Http\Operations\Requests\AssignOutletUserRequest;
 use App\Modules\Merchant\Http\Operations\Requests\ChangeOutletUserRoleRequest;
+use App\Modules\Merchant\Http\Operations\Requests\StoreOutletEmployeeRequest;
 use App\Modules\Merchant\Http\Resources\OutletUserResource;
 use App\Shared\Http\ApiResponse;
 use App\Shared\Http\Controllers\Controller;
@@ -24,6 +26,7 @@ class OutletUsersController extends Controller
         private readonly AssignOutletUser $assignOutletUser,
         private readonly ChangeOutletUserRole $changeOutletUserRole,
         private readonly RemoveOutletUser $removeOutletUser,
+        private readonly CreateOutletEmployee $createOutletEmployee,
         private readonly UserLookup $userLookup,
     ) {}
 
@@ -56,6 +59,17 @@ class OutletUsersController extends Controller
             $this->authorization->authorizedOutlet($outlet),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->assignOutletUser)($model->merchant, $model, $request->validated()),
+                fn (MerchantOutletUser $assignment) => ApiResponse::created($this->resource($assignment)),
+            ),
+        );
+    }
+
+    public function storeEmployee(StoreOutletEmployeeRequest $request, string $outlet): JsonResponse
+    {
+        return ApiResponse::fromResult(
+            $this->authorization->authorizedOutlet($outlet),
+            fn (MerchantOutlet $model) => ApiResponse::fromResult(
+                ($this->createOutletEmployee)($model->merchant, $model, $request->validated()),
                 fn (MerchantOutletUser $assignment) => ApiResponse::created($this->resource($assignment)),
             ),
         );

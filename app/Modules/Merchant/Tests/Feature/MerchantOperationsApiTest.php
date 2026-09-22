@@ -619,3 +619,140 @@ it('rejects a logo that does not belong to the merchant', function () {
         ->assertStatus(422)
         ->assertJsonPath('code', 'upload_invalid');
 });
+
+it('issues an operational upload for a merchant logo', function () {
+    $this->app->bind(ObjectStorage::class, fn () => fakeOperationsObjectStorage());
+    ['owner' => $owner, 'merchant' => $merchant] = operationsOwner();
+    Sanctum::actingAs($owner);
+
+    $response = $this->postJson('/api/v1/merchant/operations/uploads', [
+        'purpose' => 'logo',
+        'file_name' => 'logo.png',
+        'mime_type' => 'image/png',
+        'file_size' => 1024,
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.object_key', fn (string $key): bool => str_starts_with($key, "merchants/{$merchant->id}/logo/"));
+
+    expect($response->json('data.upload_url'))->toBe('https://upload.test/'.$response->json('data.object_key'));
+    expect($merchant->refresh()->logo)->toBeNull();
+});
+
+it('issues an outlet upload for a manager', function () {
+    $this->app->bind(ObjectStorage::class, fn () => fakeOperationsObjectStorage());
+    ['merchant' => $merchant] = operationsOwner();
+    ['user' => $manager] = operationsEmployee($merchant, 'outlet_manager');
+    Sanctum::actingAs($manager);
+
+    $this->postJson('/api/v1/merchant/operations/uploads', [
+        'purpose' => 'outlet',
+        'file_name' => 'front.jpg',
+        'mime_type' => 'image/jpeg',
+        'file_size' => 2048,
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.object_key', fn (string $key): bool => str_starts_with($key, "merchants/{$merchant->id}/outlets/"));
+});
+
+it('denies an operational upload for staff and for an invalid mime type', function () {
+    $this->app->bind(ObjectStorage::class, fn () => fakeOperationsObjectStorage());
+    ['merchant' => $merchant] = operationsOwner();
+    ['user' => $staff] = operationsEmployee($merchant, 'outlet_staff');
+    Sanctum::actingAs($staff);
+
+    $this->postJson('/api/v1/merchant/operations/uploads', [
+        'purpose' => 'outlet',
+        'file_name' => 'front.jpg',
+        'mime_type' => 'image/jpeg',
+        'file_size' => 2048,
+    ])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'forbidden');
+
+    ['owner' => $owner] = operationsOwner();
+    Sanctum::actingAs($owner);
+
+    $this->postJson('/api/v1/merchant/operations/uploads', [
+        'purpose' => 'logo',
+        'file_name' => 'logo.exe',
+        'mime_type' => 'application/x-msdownload',
+        'file_size' => 2048,
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'validation_error');
+});
+
+it('creates an outlet employee account and assigns the role', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    Sanctum::actingAs($owner);
+
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/employees", [
+        'email' => 'staff@example.com',
+        'phone' => '08123456789',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'role' => 'outlet_staff',
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.role', 'outlet_staff')
+        ->assertJsonPath('data.user.email', 'staff@example.com')
+        ->assertJsonPath('data.user.phone', '08123456789');
+
+    $employee = User::query()->where('email', 'staff@example.com')->sole();
+
+    expect($employee->hasVerifiedEmail())->toBeTrue()
+        ->and($employee->hasRole('outlet_staff'))->toBeTrue()
+        ->and(MerchantOutletUser::query()->where('outlet_id', $outlet->id)->where('user_id', $employee->id)->exists())->toBeTrue();
+
+    $this->postJson('/api/v1/auth/login', [
+        'email' => 'staff@example.com',
+        'password' => 'password123',
+    ])->assertOk();
+});
+
+it('rejects creating an employee with an existing email or mismatched password', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    Sanctum::actingAs($owner);
+
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/employees", [
+        'email' => $owner->email,
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'role' => 'outlet_manager',
+    ])
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'validation_error');
+
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/employees", [
+        'email' => 'fresh@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'different123',
+        'role' => 'outlet_manager',
+    ])->assertStatus(422)
+        ->assertJsonPath('code', 'validation_error');
+
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/employees", [
+        'email' => 'fresh@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'role' => 'owner',
+    ])->assertStatus(422)
+        ->assertJsonPath('code', 'validation_error');
+
+    expect(User::query()->where('email', 'fresh@example.com')->exists())->toBeFalse();
+});
+
+it('denies creating an outlet employee for staff', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    ['user' => $staff, 'outlet' => $outlet] = operationsEmployee($merchant, 'outlet_staff');
+    Sanctum::actingAs($staff);
+
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/employees", [
+        'email' => 'staff2@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'role' => 'outlet_staff',
+    ])->assertStatus(403);
+});

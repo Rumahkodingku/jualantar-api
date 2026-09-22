@@ -3,11 +3,13 @@
 namespace App\Modules\Merchant\Http\Operations;
 
 use App\Modules\Merchant\Application\Operations\Actions\ActivateMerchant;
+use App\Modules\Merchant\Application\Operations\Actions\CreateOperationalUpload;
 use App\Modules\Merchant\Application\Operations\Actions\ReactivateMerchant;
 use App\Modules\Merchant\Application\Operations\Actions\SuspendMerchant;
 use App\Modules\Merchant\Application\Operations\Actions\UpdateMerchantOperationalProfile;
 use App\Modules\Merchant\Application\Operations\Services\MerchantOperationsAuthorization;
 use App\Modules\Merchant\Domain\Models\Merchant;
+use App\Modules\Merchant\Http\Operations\Requests\CreateOperationalUploadRequest;
 use App\Modules\Merchant\Http\Operations\Requests\UpdateMerchantOperationalProfileRequest;
 use App\Modules\Merchant\Http\Resources\MerchantOperationalProfileResource;
 use App\Modules\Merchant\Http\Resources\MerchantOperationalStatusResource;
@@ -26,6 +28,7 @@ class MerchantOperationsController extends Controller
         private readonly SuspendMerchant $suspendMerchant,
         private readonly ReactivateMerchant $reactivateMerchant,
         private readonly UpdateMerchantOperationalProfile $updateProfile,
+        private readonly CreateOperationalUpload $createOperationalUpload,
         private readonly ObjectStorage $storage,
     ) {}
 
@@ -71,6 +74,17 @@ class MerchantOperationsController extends Controller
         return $this->actOnOwnedMerchant(
             fn (Merchant $merchant) => ($this->updateProfile)($merchant, $request->validated()),
             fn (Merchant $merchant) => $this->profile($merchant),
+        );
+    }
+
+    public function storeUpload(CreateOperationalUploadRequest $request): JsonResponse
+    {
+        return ApiResponse::fromResult(
+            $this->authorization->merchantContext(),
+            fn (Merchant $merchant) => ApiResponse::fromResult(
+                ($this->createOperationalUpload)($merchant, $request->validated()),
+                fn (array $upload) => ApiResponse::created($upload),
+            ),
         );
     }
 

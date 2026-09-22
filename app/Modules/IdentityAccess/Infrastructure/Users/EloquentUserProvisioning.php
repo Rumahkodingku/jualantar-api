@@ -39,4 +39,20 @@ final class EloquentUserProvisioning implements UserProvisioning
             emailVerified: $user->hasVerifiedEmail(),
         );
     }
+
+    /**
+     * @param  array{email: string, phone?: string|null, password: string}  $attributes
+     */
+    public function provisionOutletEmployee(array $attributes): UserData
+    {
+        $user = User::create($attributes);
+        $user->markEmailAsVerified();
+
+        return new UserData(
+            id: $user->id,
+            email: $user->email,
+            phone: $user->phone,
+            emailVerified: $user->hasVerifiedEmail(),
+        );
+    }
 }
