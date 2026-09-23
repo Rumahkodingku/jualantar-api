@@ -1,5 +1,7 @@
 <?php
 
+use App\Modules\Merchant\Http\Middleware\EnsureMerchantContext;
+use App\Modules\Merchant\Http\Middleware\EnsureMerchantOwner;
 use App\Shared\Http\ProblemDetailsFactory;
 use App\Shared\Middleware\RequestIdMiddleware;
 use App\Shared\Middleware\RequestLoggingMiddleware;
@@ -24,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'merchant.context' => EnsureMerchantContext::class,
+            'merchant.owner' => EnsureMerchantOwner::class,
         ]);
 
         $middleware->redirectGuestsTo(fn () => null);

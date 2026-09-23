@@ -62,7 +62,7 @@ class OutletOperationsController extends Controller
     public function show(string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.outlets.view'),
             fn (MerchantOutlet $model) => ApiResponse::success($this->resource($model)),
         );
     }
@@ -84,7 +84,7 @@ class OutletOperationsController extends Controller
     public function update(UpdateOperationalOutletRequest $request, string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.outlets.update'),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->updateOutlet)($model, $request->validated()),
                 fn (MerchantOutlet $updated) => ApiResponse::success($this->resource($updated)),
@@ -94,18 +94,18 @@ class OutletOperationsController extends Controller
 
     public function activate(string $outlet): JsonResponse
     {
-        return $this->act($outlet, fn (MerchantOutlet $model) => ($this->activateOutlet)($model));
+        return $this->act($outlet, 'merchant.operations.outlets.status.update', fn (MerchantOutlet $model) => ($this->activateOutlet)($model));
     }
 
     public function deactivate(string $outlet): JsonResponse
     {
-        return $this->act($outlet, fn (MerchantOutlet $model) => ($this->deactivateOutlet)($model));
+        return $this->act($outlet, 'merchant.operations.outlets.status.update', fn (MerchantOutlet $model) => ($this->deactivateOutlet)($model));
     }
 
     public function availability(string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.availability.view'),
             fn (MerchantOutlet $model) => ApiResponse::success(
                 new OperationalAvailabilityResource($this->availabilityResolver->resolve($model)),
             ),
@@ -115,10 +115,10 @@ class OutletOperationsController extends Controller
     /**
      * @param  callable(MerchantOutlet): Result  $action
      */
-    private function act(string $outlet, callable $action): JsonResponse
+    private function act(string $outlet, string $capability, callable $action): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, $capability),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 $action($model),
                 fn (MerchantOutlet $updated) => ApiResponse::success($this->resource($updated)),

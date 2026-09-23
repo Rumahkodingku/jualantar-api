@@ -68,7 +68,8 @@ function operationsOwner(array $merchantAttributes = []): array
 }
 
 /**
- * Create an employee with an outlet-scoped role and assignment.
+ * Create an employee with an outlet-scoped assignment. The role lives only on
+ * merchant_outlet_users; no global Spatie role is granted.
  *
  * @return array{user: User, outlet: MerchantOutlet}
  */
@@ -76,7 +77,6 @@ function operationsEmployee(Merchant $merchant, string $role, ?MerchantOutlet $o
 {
     $outlet ??= MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
     $user = test()->plainUser();
-    $user->assignRole($role);
 
     MerchantOutletUser::factory()
         ->forOutlet($outlet)
@@ -88,6 +88,31 @@ function operationsEmployee(Merchant $merchant, string $role, ?MerchantOutlet $o
 
 it('requires authentication for merchant operations', function () {
     $this->getJson('/api/v1/merchant/operations')->assertStatus(401);
+});
+
+it('distinguishes unauthenticated from unauthorized with problem codes', function () {
+    $this->getJson('/api/v1/merchant/operations')
+        ->assertStatus(401)
+        ->assertJsonPath('code', 'unauthenticated');
+
+    Sanctum::actingAs($this->plainUser());
+
+    $this->getJson('/api/v1/merchant/operations')
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'forbidden');
+});
+
+it('exposes outlet assignments in the auth me contract', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    ['user' => $manager] = operationsEmployee($merchant, 'outlet_manager', $outlet);
+
+    Sanctum::actingAs($manager);
+
+    $this->getJson('/api/v1/auth/me')
+        ->assertOk()
+        ->assertJsonPath('data.outlet_assignments.0.outlet_id', $outlet->id)
+        ->assertJsonPath('data.outlet_assignments.0.role', 'outlet_manager');
 });
 
 it('denies a user without the operations permission', function () {
@@ -291,7 +316,7 @@ it('assigns, lists, changes and removes outlet users as the owner', function () 
         ->assertJsonPath('data.role', 'outlet_manager')
         ->assertJsonPath('data.user.id', $target->id);
 
-    expect($target->fresh()->hasRole('outlet_manager'))->toBeTrue();
+    expect($target->fresh()->hasRole('outlet_manager'))->toBeFalse();
 
     $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users")
         ->assertOk()
@@ -303,7 +328,7 @@ it('assigns, lists, changes and removes outlet users as the owner', function () 
         ->assertOk()
         ->assertJsonPath('data.role', 'outlet_staff');
 
-    expect($target->fresh()->hasRole('outlet_staff'))->toBeTrue()
+    expect($target->fresh()->hasRole('outlet_staff'))->toBeFalse()
         ->and($target->fresh()->hasRole('outlet_manager'))->toBeFalse();
 
     $this->deleteJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users/{$target->id}")
@@ -682,7 +707,7 @@ it('denies an operational upload for staff and for an invalid mime type', functi
         ->assertJsonPath('code', 'validation_error');
 });
 
-it('creates an outlet employee account and assigns the role', function () {
+it('creates an outlet employee account with an outlet assignment', function () {
     ['owner' => $owner, 'merchant' => $merchant] = operationsOwner();
     $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
     Sanctum::actingAs($owner);
@@ -701,9 +726,14 @@ it('creates an outlet employee account and assigns the role', function () {
 
     $employee = User::query()->where('email', 'staff@example.com')->sole();
 
+    $assignment = MerchantOutletUser::query()
+        ->where('outlet_id', $outlet->id)
+        ->where('user_id', $employee->id)
+        ->sole();
+
     expect($employee->hasVerifiedEmail())->toBeTrue()
-        ->and($employee->hasRole('outlet_staff'))->toBeTrue()
-        ->and(MerchantOutletUser::query()->where('outlet_id', $outlet->id)->where('user_id', $employee->id)->exists())->toBeTrue();
+        ->and($assignment->role->value)->toBe('outlet_staff')
+        ->and($employee->hasRole('outlet_staff'))->toBeFalse();
 
     $this->postJson('/api/v1/auth/login', [
         'email' => 'staff@example.com',
@@ -755,4 +785,181 @@ it('denies creating an outlet employee for staff', function () {
         'password_confirmation' => 'password123',
         'role' => 'outlet_staff',
     ])->assertStatus(403);
+});
+
+it('authorizes outlet access through assignments alone, without any global Spatie role', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+
+    $manager = $this->plainUser();
+    MerchantOutletUser::factory()->forOutlet($outlet)->forUser($manager->id)->manager()->create();
+
+    expect($manager->hasRole('outlet_manager'))->toBeFalse();
+
+    Sanctum::actingAs($manager);
+
+    $this->putJson("/api/v1/merchant/operations/outlets/{$outlet->id}/operating-hours", [
+        'monday' => ['is_open' => true, 'open' => '09:00', 'close' => '21:00'],
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.monday.open', '09:00');
+});
+
+it('scopes capabilities to the assigned outlet for a multi-outlet employee', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    $outletA = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    $outletB = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+
+    $employee = $this->plainUser();
+    MerchantOutletUser::factory()->forOutlet($outletA)->forUser($employee->id)->manager()->create();
+    MerchantOutletUser::factory()->forOutlet($outletB)->forUser($employee->id)->staff()->create();
+
+    Sanctum::actingAs($employee);
+
+    $this->putJson("/api/v1/merchant/operations/outlets/{$outletA->id}/operating-hours", [
+        'monday' => ['is_open' => true, 'open' => '08:00', 'close' => '20:00'],
+    ])->assertOk();
+
+    $this->putJson("/api/v1/merchant/operations/outlets/{$outletB->id}/operating-hours", [
+        'monday' => ['is_open' => true, 'open' => '08:00', 'close' => '20:00'],
+    ])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'outlet_capability_forbidden');
+
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outletB->id}/operating-hours")
+        ->assertOk();
+});
+
+it('denies outlet management capabilities to a staff-only assignment', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+
+    $staff = $this->plainUser();
+    MerchantOutletUser::factory()->forOutlet($outlet)->forUser($staff->id)->staff()->create();
+    Sanctum::actingAs($staff);
+
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}")->assertOk();
+
+    $this->patchJson("/api/v1/merchant/operations/outlets/{$outlet->id}", ['name' => 'Nope'])
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'outlet_capability_forbidden');
+
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users")
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'outlet_capability_forbidden');
+});
+
+it('creates an outlet manager employee with only an outlet assignment', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    Sanctum::actingAs($owner);
+
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/employees", [
+        'email' => 'manager@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'role' => 'outlet_manager',
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.role', 'outlet_manager');
+
+    $employee = User::query()->where('email', 'manager@example.com')->sole();
+    $assignment = MerchantOutletUser::query()->where('user_id', $employee->id)->sole();
+
+    expect($assignment->role->value)->toBe('outlet_manager')
+        ->and($employee->hasRole('outlet_manager'))->toBeFalse();
+});
+
+it('grants a manager the full outlet capability set on the assigned outlet', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    ['user' => $manager] = operationsEmployee($merchant, 'outlet_manager', $outlet);
+    Sanctum::actingAs($manager);
+
+    $target = $this->plainUser();
+
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}")->assertOk();
+    $this->patchJson("/api/v1/merchant/operations/outlets/{$outlet->id}", ['name' => 'Manager Edit'])->assertOk();
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users")->assertOk();
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users", [
+        'user_id' => $target->id,
+        'role' => 'outlet_staff',
+    ])->assertCreated();
+    $this->patchJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users/{$target->id}", [
+        'role' => 'outlet_staff',
+    ])->assertOk();
+    $this->deleteJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users/{$target->id}")->assertNoContent();
+    $this->putJson("/api/v1/merchant/operations/outlets/{$outlet->id}/operating-hours", [
+        'monday' => ['is_open' => true, 'open' => '08:00', 'close' => '20:00'],
+    ])->assertOk();
+    $this->putJson("/api/v1/merchant/operations/outlets/{$outlet->id}/service-area", [
+        'type' => 'radius',
+        'radius_km' => 3,
+    ])->assertOk();
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/deactivate")->assertOk();
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/activate")->assertOk();
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/availability")->assertOk();
+});
+
+it('limits a staff assignment to read-only outlet capabilities', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    ['user' => $staff] = operationsEmployee($merchant, 'outlet_staff', $outlet);
+    Sanctum::actingAs($staff);
+
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}")->assertOk();
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/operating-hours")->assertOk();
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/service-area")->assertOk();
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/availability")->assertOk();
+
+    $this->patchJson("/api/v1/merchant/operations/outlets/{$outlet->id}", ['name' => 'Nope'])->assertStatus(403);
+    $this->postJson("/api/v1/merchant/operations/outlets/{$outlet->id}/deactivate")->assertStatus(403);
+    $this->putJson("/api/v1/merchant/operations/outlets/{$outlet->id}/operating-hours", [
+        'monday' => ['is_open' => true, 'open' => '08:00', 'close' => '20:00'],
+    ])->assertStatus(403);
+    $this->putJson("/api/v1/merchant/operations/outlets/{$outlet->id}/service-area", [
+        'type' => 'radius',
+        'radius_km' => 3,
+    ])->assertStatus(403);
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}/users")->assertStatus(403);
+});
+
+it('changes one outlet assignment without touching another', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = operationsOwner();
+    $outletA = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    $outletB = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+
+    $employee = $this->plainUser();
+    MerchantOutletUser::factory()->forOutlet($outletA)->forUser($employee->id)->manager()->create();
+    MerchantOutletUser::factory()->forOutlet($outletB)->forUser($employee->id)->staff()->create();
+
+    Sanctum::actingAs($owner);
+
+    $this->patchJson("/api/v1/merchant/operations/outlets/{$outletA->id}/users/{$employee->id}", [
+        'role' => 'outlet_staff',
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.role', 'outlet_staff');
+
+    $assignments = MerchantOutletUser::query()
+        ->where('user_id', $employee->id)
+        ->get()
+        ->keyBy('outlet_id');
+
+    expect($assignments[$outletA->id]->role->value)->toBe('outlet_staff')
+        ->and($assignments[$outletB->id]->role->value)->toBe('outlet_staff')
+        ->and($employee->fresh()->roles)->toHaveCount(0);
+});
+
+it('does not grant merchant operations access from a global role without a merchant context', function () {
+    ['merchant' => $merchant] = operationsOwner();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+
+    $stranger = $this->merchantUser();
+    expect($stranger->hasRole('merchant'))->toBeTrue();
+
+    Sanctum::actingAs($stranger);
+
+    $this->getJson("/api/v1/merchant/operations/outlets/{$outlet->id}")->assertStatus(403);
+    $this->getJson('/api/v1/merchant/operations')->assertStatus(403);
 });

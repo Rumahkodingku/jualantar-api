@@ -33,7 +33,7 @@ class OutletUsersController extends Controller
     public function index(string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.outlet_users.view'),
             function (MerchantOutlet $model): JsonResponse {
                 $assignments = MerchantOutletUser::query()
                     ->where('outlet_id', $model->id)
@@ -56,7 +56,7 @@ class OutletUsersController extends Controller
     public function store(AssignOutletUserRequest $request, string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.outlet_users.assign'),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->assignOutletUser)($model->merchant, $model, $request->validated()),
                 fn (MerchantOutletUser $assignment) => ApiResponse::created($this->resource($assignment)),
@@ -67,7 +67,7 @@ class OutletUsersController extends Controller
     public function storeEmployee(StoreOutletEmployeeRequest $request, string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.outlet_users.assign'),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->createOutletEmployee)($model->merchant, $model, $request->validated()),
                 fn (MerchantOutletUser $assignment) => ApiResponse::created($this->resource($assignment)),
@@ -78,7 +78,7 @@ class OutletUsersController extends Controller
     public function update(ChangeOutletUserRoleRequest $request, string $outlet, string $user): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.outlet_users.role.update'),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->changeOutletUserRole)($model, $user, (string) $request->validated('role')),
                 fn (MerchantOutletUser $assignment) => ApiResponse::success($this->resource($assignment)),
@@ -89,7 +89,7 @@ class OutletUsersController extends Controller
     public function destroy(string $outlet, string $user): Response|JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.outlet_users.remove'),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->removeOutletUser)($model, $user),
                 fn () => ApiResponse::noContent(),

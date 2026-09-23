@@ -21,7 +21,7 @@ class ServiceAreaController extends Controller
     public function show(string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.service_area.view'),
             fn (MerchantOutlet $model) => ApiResponse::success(new ServiceAreaResource($model)),
         );
     }
@@ -29,7 +29,7 @@ class ServiceAreaController extends Controller
     public function update(UpdateServiceAreaRequest $request, string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.service_area.update'),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->updateServiceArea)($model, $request->validated()),
                 fn (MerchantOutlet $updated) => ApiResponse::success(new ServiceAreaResource($updated)),

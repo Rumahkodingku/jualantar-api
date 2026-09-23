@@ -32,11 +32,11 @@ final class CreateOperationalUpload
     {
         $isLogo = $data['purpose'] === 'logo';
 
-        $permission = $isLogo
-            ? 'merchant.operations.profile.update'
-            : 'merchant.operations.outlets.update';
+        $authorized = $isLogo
+            ? $this->authorization->isOwner($merchant)
+            : $this->authorization->hasOutletCapability('merchant.operations.outlets.update');
 
-        if (! $this->authorization->can($permission)) {
+        if (! $authorized) {
             return $this->forbidden();
         }
 

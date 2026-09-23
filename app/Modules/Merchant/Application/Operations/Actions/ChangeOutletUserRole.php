@@ -2,17 +2,15 @@
 
 namespace App\Modules\Merchant\Application\Operations\Actions;
 
-use App\Modules\IdentityAccess\Contracts\Authorization;
 use App\Modules\Merchant\Application\Operations\Concerns\ReportsOperationsErrors;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
 use App\Shared\Result\Result;
+use Illuminate\Support\Facades\Log;
 
 final class ChangeOutletUserRole
 {
     use ReportsOperationsErrors;
-
-    public function __construct(private readonly Authorization $authorization) {}
 
     public function __invoke(MerchantOutlet $outlet, string $userId, string $newRole): Result
     {
@@ -29,25 +27,20 @@ final class ChangeOutletUserRole
             return $this->businessRuleViolation('The merchant owner role cannot be changed through an outlet assignment.');
         }
 
-        $oldRole = $assignment->role->value;
-
-        if ($oldRole === $newRole) {
+        if ($assignment->role->value === $newRole) {
             return Result::ok($assignment);
         }
 
+        $previousRole = $assignment->role->value;
+
         $assignment->update(['role' => $newRole]);
 
-        $stillHasOldRole = MerchantOutletUser::query()
-            ->where('user_id', $userId)
-            ->where('role', $oldRole)
-            ->whereKeyNot($assignment->id)
-            ->exists();
-
-        if (! $stillHasOldRole) {
-            $this->authorization->removeRole($userId, $oldRole);
-        }
-
-        $this->authorization->assignRole($userId, $newRole);
+        Log::info('Outlet employee role changed.', [
+            'outlet_id' => $outlet->id,
+            'user_id' => $userId,
+            'from_role' => $previousRole,
+            'to_role' => $newRole,
+        ]);
 
         return Result::ok($assignment->refresh());
     }

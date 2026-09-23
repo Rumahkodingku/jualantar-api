@@ -2,17 +2,15 @@
 
 namespace App\Modules\Merchant\Application\Operations\Actions;
 
-use App\Modules\IdentityAccess\Contracts\Authorization;
 use App\Modules\Merchant\Application\Operations\Concerns\ReportsOperationsErrors;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
 use App\Shared\Result\Result;
+use Illuminate\Support\Facades\Log;
 
 final class RemoveOutletUser
 {
     use ReportsOperationsErrors;
-
-    public function __construct(private readonly Authorization $authorization) {}
 
     public function __invoke(MerchantOutlet $outlet, string $userId): Result
     {
@@ -25,17 +23,12 @@ final class RemoveOutletUser
             return $this->assignmentNotFound();
         }
 
-        $role = $assignment->role->value;
         $assignment->delete();
 
-        $stillHasRole = MerchantOutletUser::query()
-            ->where('user_id', $userId)
-            ->where('role', $role)
-            ->exists();
-
-        if (! $stillHasRole) {
-            $this->authorization->removeRole($userId, $role);
-        }
+        Log::info('Outlet employee removed from outlet.', [
+            'outlet_id' => $outlet->id,
+            'user_id' => $userId,
+        ]);
 
         return Result::ok(null);
     }

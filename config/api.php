@@ -65,6 +65,7 @@ return [
         'merchant_not_found' => ['status' => 404, 'title' => 'Not Found'],
         'outlet_not_found' => ['status' => 404, 'title' => 'Not Found'],
         'outlet_scope_forbidden' => ['status' => 403, 'title' => 'Forbidden'],
+        'outlet_capability_forbidden' => ['status' => 403, 'title' => 'Forbidden'],
         'invalid_status_transition' => ['status' => 422, 'title' => 'Unprocessable Entity'],
         'invalid_operating_hours' => ['status' => 422, 'title' => 'Unprocessable Entity'],
         'invalid_service_area' => ['status' => 422, 'title' => 'Unprocessable Entity'],

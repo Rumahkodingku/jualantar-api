@@ -2,7 +2,6 @@
 
 namespace App\Modules\Merchant\Application\Operations\Actions;
 
-use App\Modules\IdentityAccess\Contracts\Authorization;
 use App\Modules\IdentityAccess\Contracts\UserProvisioning;
 use App\Modules\Merchant\Application\Operations\Concerns\ReportsOperationsErrors;
 use App\Modules\Merchant\Domain\Models\Merchant;
@@ -10,6 +9,7 @@ use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
 use App\Shared\Result\Result;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Provisions an outlet employee account and assigns it to the outlet in one
@@ -22,7 +22,6 @@ final class CreateOutletEmployee
 
     public function __construct(
         private readonly UserProvisioning $userProvisioning,
-        private readonly Authorization $authorization,
     ) {}
 
     /**
@@ -50,10 +49,15 @@ final class CreateOutletEmployee
                 'role' => $role,
             ]);
 
-            $this->authorization->assignRole($user->id, $role);
-
             return $assignment;
         });
+
+        Log::info('Outlet employee account created and assigned.', [
+            'merchant_id' => $assignment->merchant_id,
+            'outlet_id' => $assignment->outlet_id,
+            'user_id' => $assignment->user_id,
+            'role' => $role,
+        ]);
 
         return Result::ok($assignment);
     }

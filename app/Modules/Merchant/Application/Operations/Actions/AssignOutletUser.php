@@ -2,7 +2,6 @@
 
 namespace App\Modules\Merchant\Application\Operations\Actions;
 
-use App\Modules\IdentityAccess\Contracts\Authorization;
 use App\Modules\IdentityAccess\Contracts\UserLookup;
 use App\Modules\Merchant\Application\Operations\Concerns\ReportsOperationsErrors;
 use App\Modules\Merchant\Domain\Models\Merchant;
@@ -10,6 +9,7 @@ use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
 use App\Shared\Exceptions\ApiException;
 use App\Shared\Result\Result;
+use Illuminate\Support\Facades\Log;
 
 final class AssignOutletUser
 {
@@ -17,7 +17,6 @@ final class AssignOutletUser
 
     public function __construct(
         private readonly UserLookup $userLookup,
-        private readonly Authorization $authorization,
     ) {}
 
     /**
@@ -58,7 +57,12 @@ final class AssignOutletUser
             'role' => $role,
         ]);
 
-        $this->authorization->assignRole($userId, $role);
+        Log::info('Outlet employee assigned to outlet.', [
+            'merchant_id' => $merchant->id,
+            'outlet_id' => $outlet->id,
+            'user_id' => $userId,
+            'role' => $role,
+        ]);
 
         return Result::ok($assignment);
     }

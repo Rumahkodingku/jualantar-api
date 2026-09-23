@@ -41,20 +41,20 @@ it('assigns and removes a role for an existing user', function () {
     $user = User::factory()->create();
     $authorization = new SpatieAuthorization;
 
-    expect($authorization->userHasRole($user->id, 'outlet_staff'))->toBeFalse();
+    expect($authorization->userHasRole($user->id, 'driver'))->toBeFalse();
 
-    $authorization->assignRole($user->id, 'outlet_staff');
-    expect($authorization->userHasRole($user->id, 'outlet_staff'))->toBeTrue();
+    $authorization->assignRole($user->id, 'driver');
+    expect($authorization->userHasRole($user->id, 'driver'))->toBeTrue();
 
-    $authorization->removeRole($user->id, 'outlet_staff');
-    expect($authorization->userHasRole($user->id, 'outlet_staff'))->toBeFalse();
+    $authorization->removeRole($user->id, 'driver');
+    expect($authorization->userHasRole($user->id, 'driver'))->toBeFalse();
 });
 
 it('ignores role changes for missing users and unknown roles', function () {
     $missingUserId = '00000000-0000-0000-0000-000000000000';
     $authorization = new SpatieAuthorization;
 
-    $authorization->assignRole($missingUserId, 'outlet_staff');
+    $authorization->assignRole($missingUserId, 'driver');
 
     $user = User::factory()->create();
     $authorization->assignRole($user->id, 'does-not-exist');

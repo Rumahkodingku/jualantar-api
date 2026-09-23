@@ -2,7 +2,7 @@
 
 namespace App\Modules\Merchant\Application\Operations\Services;
 
-use App\Modules\IdentityAccess\Contracts\Authorization;
+use App\Modules\Merchant\Domain\Authorization\OutletRoleCapabilityResolver;
 use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
@@ -19,7 +19,9 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final class MerchantOperationsAuthorization
 {
-    public function __construct(private readonly Authorization $authorization) {}
+    public function __construct(
+        private readonly OutletRoleCapabilityResolver $capabilityResolver,
+    ) {}
 
     public function userId(): string
     {
@@ -131,9 +133,62 @@ final class MerchantOperationsAuthorization
         return $this->outletNotFound();
     }
 
-    public function can(string $permission): bool
+    /**
+     * Authorize a capability on a specific outlet. Owners bypass the assignment
+     * check; everyone else must hold an assignment whose outlet role grants the
+     * requested capability. Reuses authorizedOutlet() so the 403 (same merchant,
+     * outside the assignment scope) versus 404 (foreign merchant) contract is
+     * preserved.
+     */
+    public function authorizeOutletAction(string $outletId, string $capability): Result
     {
-        return $this->authorization->userHasPermission($this->userId(), $permission);
+        $outletResult = $this->authorizedOutlet($outletId);
+
+        if ($outletResult->isErr()) {
+            return $outletResult;
+        }
+
+        /** @var MerchantOutlet $outlet */
+        $outlet = $outletResult->unwrap();
+
+        if ($this->isOwner($outlet->merchant)) {
+            return $outletResult;
+        }
+
+        $assignment = MerchantOutletUser::query()
+            ->where('outlet_id', $outlet->id)
+            ->where('user_id', $this->userId())
+            ->first();
+
+        if ($assignment === null || ! $this->capabilityResolver->allows($assignment->role, $capability)) {
+            return $this->outletCapabilityForbidden();
+        }
+
+        return $outletResult;
+    }
+
+    /**
+     * Whether the user may act on an outlet-scoped asset without naming an
+     * outlet (e.g. the merchant-level upload endpoint). Owners always may; an
+     * employee qualifies when any of their assignments grants the capability.
+     */
+    public function hasOutletCapability(string $capability): bool
+    {
+        if (Merchant::query()->where('user_id', $this->userId())->exists()) {
+            return true;
+        }
+
+        $assignments = MerchantOutletUser::query()
+            ->where('user_id', $this->userId())
+            ->get();
+
+        foreach ($assignments as $assignment) {
+            if ($this->capabilityResolver->allows($assignment->role, $capability)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function merchantNotFound(): Result
@@ -153,6 +208,16 @@ final class MerchantOperationsAuthorization
             message: 'The outlet was not found in your scope.',
             status: 404,
             title: 'Not Found',
+        ));
+    }
+
+    private function outletCapabilityForbidden(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'outlet_capability_forbidden',
+            message: 'Your role on this outlet does not allow this action.',
+            status: 403,
+            title: 'Forbidden',
         ));
     }
 }

@@ -21,7 +21,7 @@ class OperatingHoursController extends Controller
     public function show(string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.hours.view'),
             fn (MerchantOutlet $model) => ApiResponse::success(
                 new OperatingHoursResource($model->operating_hours ?? []),
             ),
@@ -31,7 +31,7 @@ class OperatingHoursController extends Controller
     public function update(UpdateOperatingHoursRequest $request, string $outlet): JsonResponse
     {
         return ApiResponse::fromResult(
-            $this->authorization->authorizedOutlet($outlet),
+            $this->authorization->authorizeOutletAction($outlet, 'merchant.operations.hours.update'),
             fn (MerchantOutlet $model) => ApiResponse::fromResult(
                 ($this->updateOperatingHours)($model, $request->all()),
                 fn (MerchantOutlet $updated) => ApiResponse::success(

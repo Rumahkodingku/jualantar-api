@@ -2,6 +2,7 @@
 
 namespace App\Modules\IdentityAccess\Http\Resources;
 
+use App\Modules\IdentityAccess\Contracts\UserContextContributor;
 use App\Modules\IdentityAccess\Domain\Models\Permission;
 use App\Modules\IdentityAccess\Domain\Models\Role;
 use App\Modules\IdentityAccess\Domain\Models\User;
@@ -25,6 +26,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'roles' => $this->roles->pluck('name')->values()->all(),
             'permissions' => $this->resolvedPermissions(),
+            ...app(UserContextContributor::class)->contribute($this->id),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
