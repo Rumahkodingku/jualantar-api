@@ -74,7 +74,13 @@ class ProductController extends Controller
         return ApiResponse::fromResult(
             $this->authorization->product($product),
             function (Product $model): JsonResponse {
-                $model->load(['category', 'variants', 'media']);
+                $model->load([
+                    'category',
+                    'variants',
+                    'media',
+                    'modifierGroups' => fn ($relation) => $this->ordered($relation),
+                    'modifierGroups.modifiers' => fn ($relation) => $this->ordered($relation),
+                ]);
                 $this->mediaUrls->hydrate($model->media);
 
                 return ApiResponse::success(new ProductDetailResource($model));
@@ -176,5 +182,13 @@ class ProductController extends Controller
         $paginator = $query->paginate($validated['per_page'] ?? 15)->withQueryString();
 
         return ApiResponse::paginated($paginator, ProductResource::collection($paginator->items()));
+    }
+
+    private function ordered(mixed $relation): mixed
+    {
+        return $relation
+            ->orderBy('display_order')
+            ->orderBy('created_at')
+            ->orderBy('id');
     }
 }

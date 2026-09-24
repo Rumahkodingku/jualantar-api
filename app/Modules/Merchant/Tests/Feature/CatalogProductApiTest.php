@@ -9,6 +9,8 @@ use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\OutletProduct;
 use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Domain\Models\ProductMedia;
+use App\Modules\Merchant\Domain\Models\ProductModifier;
+use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Modules\Merchant\Domain\Models\ProductVariant;
 use Laravel\Sanctum\Sanctum;
 
@@ -360,4 +362,42 @@ it('returns 404 for a product owned by another merchant', function () {
     $this->postJson(PRODUCTS_URL.'/'.$foreign->id.'/activate')->assertStatus(404);
 
     expect($foreign->fresh()->name)->not->toBe('Hijack');
+});
+
+it('shows every modifier group including inactive ones on the product detail', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+    ]);
+    $group = ProductModifierGroup::factory()->forProduct($product)->create(['name' => 'Pilihan', 'display_order' => 1]);
+    ProductModifier::factory()->forGroup($group)->create(['name' => 'Extra', 'display_order' => 1]);
+    ProductModifierGroup::factory()->forProduct($product)->inactive()->create(['name' => 'Nonaktif', 'display_order' => 2]);
+    Sanctum::actingAs($owner);
+
+    $this->getJson(PRODUCTS_URL.'/'.$product->id)
+        ->assertOk()
+        ->assertJsonCount(2, 'data.modifier_groups')
+        ->assertJsonPath('data.modifier_groups.0.name', 'Pilihan')
+        ->assertJsonCount(1, 'data.modifier_groups.0.modifiers')
+        ->assertJsonPath('data.modifier_groups.0.modifiers.0.name', 'Extra')
+        ->assertJsonPath('data.modifier_groups.1.name', 'Nonaktif');
+});
+
+it('cascades the soft delete to modifier groups and modifiers', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+    ]);
+    $group = ProductModifierGroup::factory()->forProduct($product)->create();
+    $modifier = ProductModifier::factory()->forGroup($group)->create();
+    Sanctum::actingAs($owner);
+
+    $this->deleteJson(PRODUCTS_URL.'/'.$product->id)->assertStatus(204);
+
+    expect(ProductModifierGroup::withTrashed()->find($group->id)->deleted_at)->not->toBeNull()
+        ->and(ProductModifier::withTrashed()->find($modifier->id)->deleted_at)->not->toBeNull();
 });

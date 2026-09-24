@@ -3,6 +3,7 @@
 namespace App\Modules\Merchant\Application\Catalog\Services;
 
 use App\Modules\Merchant\Application\Catalog\Concerns\ReportsCatalogErrors;
+use App\Modules\Merchant\Domain\Enums\CatalogStatus;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\OutletProduct;
 use App\Modules\Merchant\Domain\Models\Product;
@@ -43,6 +44,16 @@ final class CatalogQueryService
                 'category',
                 'variants',
                 'media',
+                'modifierGroups' => fn ($relation) => $relation
+                    ->where('status', CatalogStatus::Active->value)
+                    ->orderBy('display_order')
+                    ->orderBy('created_at')
+                    ->orderBy('id'),
+                'modifierGroups.modifiers' => fn ($relation) => $relation
+                    ->where('status', CatalogStatus::Active->value)
+                    ->orderBy('display_order')
+                    ->orderBy('created_at')
+                    ->orderBy('id'),
                 'outletProducts' => fn ($relation) => $relation->where('outlet_id', $outlet->id),
             ]);
 

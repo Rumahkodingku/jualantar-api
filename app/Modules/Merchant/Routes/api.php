@@ -6,6 +6,8 @@ use App\Modules\Merchant\Http\Catalog\CategoryController;
 use App\Modules\Merchant\Http\Catalog\OutletCatalogController;
 use App\Modules\Merchant\Http\Catalog\ProductController;
 use App\Modules\Merchant\Http\Catalog\ProductMediaController;
+use App\Modules\Merchant\Http\Catalog\ProductModifierController;
+use App\Modules\Merchant\Http\Catalog\ProductModifierGroupController;
 use App\Modules\Merchant\Http\Catalog\ProductOutletController;
 use App\Modules\Merchant\Http\Catalog\ProductVariantController;
 use App\Modules\Merchant\Http\Merchants\MerchantController;
@@ -170,6 +172,40 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
                     ->whereUuid('product')->whereUuid('media')->name('products.media.destroy');
                 Route::post('/products/{product}/media/{media}/primary', [ProductMediaController::class, 'setPrimary'])
                     ->whereUuid('product')->whereUuid('media')->name('products.media.primary');
+
+                Route::get('/products/{product}/modifier-groups', [ProductModifierGroupController::class, 'index'])
+                    ->whereUuid('product')->name('products.modifier_groups.index');
+                Route::post('/products/{product}/modifier-groups', [ProductModifierGroupController::class, 'store'])
+                    ->whereUuid('product')->name('products.modifier_groups.store');
+                Route::put('/products/{product}/modifier-groups/order', [ProductModifierGroupController::class, 'reorder'])
+                    ->whereUuid('product')->name('products.modifier_groups.order');
+                Route::get('/products/{product}/modifier-groups/{group}', [ProductModifierGroupController::class, 'show'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.show');
+                Route::patch('/products/{product}/modifier-groups/{group}', [ProductModifierGroupController::class, 'update'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.update');
+                Route::delete('/products/{product}/modifier-groups/{group}', [ProductModifierGroupController::class, 'destroy'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.destroy');
+                Route::post('/products/{product}/modifier-groups/{group}/activate', [ProductModifierGroupController::class, 'activate'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.activate');
+                Route::post('/products/{product}/modifier-groups/{group}/deactivate', [ProductModifierGroupController::class, 'deactivate'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.deactivate');
+
+                Route::get('/products/{product}/modifier-groups/{group}/modifiers', [ProductModifierController::class, 'index'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.modifiers.index');
+                Route::post('/products/{product}/modifier-groups/{group}/modifiers', [ProductModifierController::class, 'store'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.modifiers.store');
+                Route::put('/products/{product}/modifier-groups/{group}/modifiers/order', [ProductModifierController::class, 'reorder'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.modifiers.order');
+                Route::get('/products/{product}/modifier-groups/{group}/modifiers/{modifier}', [ProductModifierController::class, 'show'])
+                    ->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('products.modifier_groups.modifiers.show');
+                Route::patch('/products/{product}/modifier-groups/{group}/modifiers/{modifier}', [ProductModifierController::class, 'update'])
+                    ->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('products.modifier_groups.modifiers.update');
+                Route::delete('/products/{product}/modifier-groups/{group}/modifiers/{modifier}', [ProductModifierController::class, 'destroy'])
+                    ->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('products.modifier_groups.modifiers.destroy');
+                Route::post('/products/{product}/modifier-groups/{group}/modifiers/{modifier}/activate', [ProductModifierController::class, 'activate'])
+                    ->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('products.modifier_groups.modifiers.activate');
+                Route::post('/products/{product}/modifier-groups/{group}/modifiers/{modifier}/deactivate', [ProductModifierController::class, 'deactivate'])
+                    ->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('products.modifier_groups.modifiers.deactivate');
 
                 Route::get('/products/{product}/outlets', [ProductOutletController::class, 'index'])
                     ->whereUuid('product')->name('products.outlets.index');

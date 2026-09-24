@@ -65,6 +65,14 @@ class Product extends Model
     }
 
     /**
+     * @return HasMany<ProductModifierGroup, $this>
+     */
+    public function modifierGroups(): HasMany
+    {
+        return $this->hasMany(ProductModifierGroup::class);
+    }
+
+    /**
      * @return HasMany<OutletProduct, $this>
      */
     public function outletProducts(): HasMany

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Merchant\Http\Merchants;
+namespace App\Modules\Merchant\Http\Merchants\Requests;
 
 use App\Modules\Merchant\Domain\Enums\MerchantStatus;
 use App\Modules\Merchant\Domain\Enums\MerchantType;

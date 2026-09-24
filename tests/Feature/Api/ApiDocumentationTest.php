@@ -74,14 +74,23 @@ it('documents the merchant catalog endpoints', function () {
         '/v1/merchant/catalog/products/{product}/media/order',
         '/v1/merchant/catalog/products/{product}/outlets',
         '/v1/merchant/catalog/products/{product}/outlets/{outlet}/availability',
+        '/v1/merchant/catalog/products/{product}/modifier-groups',
+        '/v1/merchant/catalog/products/{product}/modifier-groups/order',
+        '/v1/merchant/catalog/products/{product}/modifier-groups/{group}',
+        '/v1/merchant/catalog/products/{product}/modifier-groups/{group}/activate',
+        '/v1/merchant/catalog/products/{product}/modifier-groups/{group}/modifiers',
+        '/v1/merchant/catalog/products/{product}/modifier-groups/{group}/modifiers/order',
+        '/v1/merchant/catalog/products/{product}/modifier-groups/{group}/modifiers/{modifier}',
         '/v1/merchant/catalog/outlets/{outlet}/products',
         '/v1/merchant/catalog/outlets/{outlet}/products/order',
     ]);
 
     expect($spec['paths']['/v1/merchant/catalog/products']['post']['responses'])
         ->toHaveKeys(['201', '401', '403', '404', '422'])
-        ->and($spec['paths']['/v1/merchant/catalog/products/{product}/activate']['post']['responses'])
+        ->and($spec['paths']['/v1/merchant/catalog/products/{product}/modifier-groups/{group}/activate']['post']['responses'])
         ->toHaveKeys(['200', '401', '403', '404', '409'])
+        ->and($spec['paths']['/v1/merchant/catalog/products/{product}/modifier-groups/{group}/modifiers/{modifier}']['delete']['responses'])
+        ->toHaveKeys(['204', '401', '403', '404', '409'])
         ->and($spec['paths']['/v1/merchant/catalog/categories/{category}']['delete']['responses'])
         ->toHaveKeys(['204', '401', '403', '404', '409'])
         ->and($spec['paths']['/v1/merchant/catalog/categories']['post']['responses']['201']['content']['application/json']['schema']['properties']['data']['$ref'])

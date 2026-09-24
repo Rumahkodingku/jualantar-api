@@ -22,6 +22,7 @@ class ProductDetailResource extends ProductResource
             'category' => new CatalogCategoryResource($this->whenLoaded('category')),
             'variants' => ProductVariantResource::collection($this->whenLoaded('variants')),
             'media' => ProductMediaResource::collection($this->whenLoaded('media')),
+            'modifier_groups' => ProductModifierGroupResource::collection($this->whenLoaded('modifierGroups')),
         ];
     }
 }

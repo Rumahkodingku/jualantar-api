@@ -112,4 +112,44 @@ trait ReportsCatalogErrors
             fields: $fields,
         ));
     }
+
+    private function modifierGroupInsufficientModifiers(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'modifier_group_insufficient_modifiers',
+            message: 'The group needs at least one more active modifier than its min selection.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
+
+    private function modifierRequiredByActiveGroup(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'modifier_required_by_active_group',
+            message: 'An active modifier group must keep enough active modifiers to be selectable.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
+
+    private function modifierGroupLimitReached(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'modifier_group_limit_reached',
+            message: 'This product already has the maximum number of modifier groups.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
+
+    private function modifierLimitReached(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'modifier_limit_reached',
+            message: 'This modifier group already has the maximum number of modifiers.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
 }

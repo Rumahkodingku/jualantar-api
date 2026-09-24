@@ -59,6 +59,7 @@ class OutletCatalogItemResource extends JsonResource
                 'url' => $primaryMedia->url,
                 'alt_text' => $primaryMedia->alt_text,
             ] : null,
+            'modifier_groups' => ProductModifierGroupResource::collection($product->modifierGroups),
             'assignment' => $assignment === null ? null : [
                 'id' => $assignment->id,
                 'status' => $assignment->status->value,

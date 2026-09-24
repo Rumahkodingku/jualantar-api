@@ -14,6 +14,8 @@ use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\OutletProduct;
 use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Domain\Models\ProductMedia;
+use App\Modules\Merchant\Domain\Models\ProductModifier;
+use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Modules\Merchant\Domain\Models\ProductVariant;
 use App\Modules\Payout\Domain\Enums\PayoutOwnerType;
 use App\Modules\Payout\Domain\Models\PayoutAccount;
@@ -196,6 +198,22 @@ trait InteractsWithModules
     protected function newProductMedia(array $attributes = []): ProductMedia
     {
         return ProductMedia::factory()->create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newProductModifierGroup(array $attributes = []): ProductModifierGroup
+    {
+        return ProductModifierGroup::factory()->create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newProductModifier(array $attributes = []): ProductModifier
+    {
+        return ProductModifier::factory()->create($attributes);
     }
 
     /**

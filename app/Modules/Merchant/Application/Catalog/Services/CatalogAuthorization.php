@@ -10,6 +10,8 @@ use App\Modules\Merchant\Domain\Models\MerchantOutlet;
 use App\Modules\Merchant\Domain\Models\OutletProduct;
 use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Domain\Models\ProductMedia;
+use App\Modules\Merchant\Domain\Models\ProductModifier;
+use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Modules\Merchant\Domain\Models\ProductVariant;
 use App\Shared\Result\Result;
 
@@ -113,6 +115,34 @@ final class CatalogAuthorization
         }
 
         return Result::ok($media);
+    }
+
+    public function modifierGroup(Product $product, string $groupId): Result
+    {
+        $group = ProductModifierGroup::query()
+            ->where('product_id', $product->id)
+            ->where('merchant_id', $product->merchant_id)
+            ->find($groupId);
+
+        if ($group === null) {
+            return $this->catalogNotFound('The modifier group was not found.');
+        }
+
+        return Result::ok($group);
+    }
+
+    public function modifier(ProductModifierGroup $group, string $modifierId): Result
+    {
+        $modifier = ProductModifier::query()
+            ->where('modifier_group_id', $group->id)
+            ->where('merchant_id', $group->merchant_id)
+            ->find($modifierId);
+
+        if ($modifier === null) {
+            return $this->catalogNotFound('The modifier was not found.');
+        }
+
+        return Result::ok($modifier);
     }
 
     /**

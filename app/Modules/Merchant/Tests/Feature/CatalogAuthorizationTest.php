@@ -9,6 +9,8 @@ use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
 use App\Modules\Merchant\Domain\Models\OutletProduct;
 use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Domain\Models\ProductMedia;
+use App\Modules\Merchant\Domain\Models\ProductModifier;
+use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Modules\Merchant\Domain\Models\ProductVariant;
 use Laravel\Sanctum\Sanctum;
 
@@ -33,6 +35,8 @@ function authorizationFixture(): array
     ]);
     $variant = ProductVariant::factory()->forProduct($product)->create();
     $media = ProductMedia::factory()->forProduct($product)->primary()->create();
+    $group = ProductModifierGroup::factory()->forProduct($product)->create();
+    $modifier = ProductModifier::factory()->forGroup($group)->create();
     $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
     $otherOutlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
     OutletProduct::factory()->forOutlet($outlet)->forProduct($product)->create();
@@ -47,13 +51,15 @@ function authorizationFixture(): array
     ]);
     $foreignVariant = ProductVariant::factory()->forProduct($foreignProduct)->create();
     $foreignMedia = ProductMedia::factory()->forProduct($foreignProduct)->primary()->create();
+    $foreignGroup = ProductModifierGroup::factory()->forProduct($foreignProduct)->create();
+    $foreignModifier = ProductModifier::factory()->forGroup($foreignGroup)->create();
     $foreignOutlet = MerchantOutlet::factory()->create(['merchant_id' => $foreignMerchant->id]);
     OutletProduct::factory()->forOutlet($foreignOutlet)->forProduct($foreignProduct)->create();
 
     return compact(
-        'owner', 'merchant', 'category', 'product', 'variant', 'media', 'outlet', 'otherOutlet',
+        'owner', 'merchant', 'category', 'product', 'variant', 'media', 'group', 'modifier', 'outlet', 'otherOutlet',
         'foreignOwner', 'foreignMerchant', 'foreignCategory', 'foreignProduct', 'foreignVariant',
-        'foreignMedia', 'foreignOutlet',
+        'foreignMedia', 'foreignGroup', 'foreignModifier', 'foreignOutlet',
     );
 }
 
@@ -83,6 +89,8 @@ function ownerOnlyCatalogRequests(array $f): array
     $product = $f['product']->id;
     $variant = $f['variant']->id;
     $media = $f['media']->id;
+    $group = $f['group']->id;
+    $modifier = $f['modifier']->id;
 
     return [
         ['get', '/categories', []],
@@ -120,6 +128,22 @@ function ownerOnlyCatalogRequests(array $f): array
         ['post', '/products/'.$product.'/outlets', ['outlet_ids' => [$f['outlet']->id]]],
         ['put', '/products/'.$product.'/outlets', ['outlet_ids' => []]],
         ['delete', '/products/'.$product.'/outlets/'.$f['outlet']->id, []],
+        ['get', '/products/'.$product.'/modifier-groups', []],
+        ['post', '/products/'.$product.'/modifier-groups', ['name' => 'Grup', 'selection_type' => 'single']],
+        ['put', '/products/'.$product.'/modifier-groups/order', ['items' => [['group_id' => $group, 'display_order' => 1]]]],
+        ['get', '/products/'.$product.'/modifier-groups/'.$group, []],
+        ['patch', '/products/'.$product.'/modifier-groups/'.$group, ['name' => 'Ganti']],
+        ['delete', '/products/'.$product.'/modifier-groups/'.$group, []],
+        ['post', '/products/'.$product.'/modifier-groups/'.$group.'/activate', []],
+        ['post', '/products/'.$product.'/modifier-groups/'.$group.'/deactivate', []],
+        ['get', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers', []],
+        ['post', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers', ['name' => 'Mod', 'price' => 0]],
+        ['put', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers/order', ['items' => [['modifier_id' => $modifier, 'display_order' => 1]]]],
+        ['get', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers/'.$modifier, []],
+        ['patch', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers/'.$modifier, ['name' => 'Ganti']],
+        ['delete', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers/'.$modifier, []],
+        ['post', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers/'.$modifier.'/activate', []],
+        ['post', '/products/'.$product.'/modifier-groups/'.$group.'/modifiers/'.$modifier.'/deactivate', []],
     ];
 }
 
@@ -171,6 +195,10 @@ it('grants the owner-only actions to the merchant owner', function () {
     $this->getJson(CATALOG_PREFIX.'/products/'.$f['product']->id.'/variants')->assertOk();
     $this->getJson(CATALOG_PREFIX.'/products/'.$f['product']->id.'/media')->assertOk();
     $this->getJson(CATALOG_PREFIX.'/products/'.$f['product']->id.'/outlets')->assertOk();
+    $this->getJson(CATALOG_PREFIX.'/products/'.$f['product']->id.'/modifier-groups')->assertOk();
+    $this->getJson(CATALOG_PREFIX.'/products/'.$f['product']->id.'/modifier-groups/'.$f['group']->id)->assertOk();
+    $this->getJson(CATALOG_PREFIX.'/products/'.$f['product']->id.'/modifier-groups/'.$f['group']->id.'/modifiers')->assertOk();
+    $this->getJson(CATALOG_PREFIX.'/products/'.$f['product']->id.'/modifier-groups/'.$f['group']->id.'/modifiers/'.$f['modifier']->id)->assertOk();
 });
 
 it('resolves every catalog resource of another merchant as not found', function () {
@@ -191,6 +219,13 @@ it('resolves every catalog resource of another merchant as not found', function 
         ['delete', '/products/'.$f['foreignProduct']->id.'/media/'.$f['foreignMedia']->id],
         ['get', '/products/'.$f['foreignProduct']->id.'/outlets'],
         ['delete', '/products/'.$f['foreignProduct']->id.'/outlets/'.$f['foreignOutlet']->id],
+        ['get', '/products/'.$f['foreignProduct']->id.'/modifier-groups'],
+        ['get', '/products/'.$f['foreignProduct']->id.'/modifier-groups/'.$f['foreignGroup']->id],
+        ['delete', '/products/'.$f['foreignProduct']->id.'/modifier-groups/'.$f['foreignGroup']->id],
+        ['get', '/products/'.$f['foreignProduct']->id.'/modifier-groups/'.$f['foreignGroup']->id.'/modifiers'],
+        ['delete', '/products/'.$f['foreignProduct']->id.'/modifier-groups/'.$f['foreignGroup']->id.'/modifiers/'.$f['foreignModifier']->id],
+        ['get', '/products/'.$f['product']->id.'/modifier-groups/'.$f['foreignGroup']->id],
+        ['get', '/products/'.$f['product']->id.'/modifier-groups/'.$f['group']->id.'/modifiers/'.$f['foreignModifier']->id],
         ['get', '/outlets/'.$f['foreignOutlet']->id.'/products'],
     ];
 

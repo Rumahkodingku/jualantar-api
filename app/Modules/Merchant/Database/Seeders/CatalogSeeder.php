@@ -3,12 +3,15 @@
 namespace App\Modules\Merchant\Database\Seeders;
 
 use App\Modules\Merchant\Domain\Enums\CatalogStatus;
+use App\Modules\Merchant\Domain\Enums\ModifierSelectionType;
 use App\Modules\Merchant\Domain\Enums\ProductAvailabilityStatus;
 use App\Modules\Merchant\Domain\Enums\ProductType;
 use App\Modules\Merchant\Domain\Models\CatalogCategory;
 use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\OutletProduct;
 use App\Modules\Merchant\Domain\Models\Product;
+use App\Modules\Merchant\Domain\Models\ProductModifier;
+use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Modules\Merchant\Domain\Models\ProductVariant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -44,6 +47,15 @@ class CatalogSeeder extends Seeder
             $this->assignment($outlet->id, $merchant->id, $icedTea, 1);
             $this->assignment($outlet->id, $merchant->id, $iceCream, 2);
             $this->assignment($outlet->id, $merchant->id, $friedRice, 3);
+
+            $sugar = $this->modifierGroup($merchant, $icedTea, 'Pilihan Gula', ModifierSelectionType::Single, 1, 1, true, 1);
+            $this->modifier($merchant, $sugar, 'Normal', 0, 1, true);
+            $this->modifier($merchant, $sugar, 'Less Sugar', 0, 2);
+            $this->modifier($merchant, $sugar, 'Tanpa Gula', 0, 3);
+
+            $extras = $this->modifierGroup($merchant, $icedTea, 'Tambahan', ModifierSelectionType::Multiple, 0, 2, false, 2);
+            $this->modifier($merchant, $extras, 'Extra Boba', 3_000, 1);
+            $this->modifier($merchant, $extras, 'Extra Jelly', 2_500, 2);
         });
     }
 
@@ -120,6 +132,52 @@ class CatalogSeeder extends Seeder
                 'status' => CatalogStatus::Active,
                 'availability_status' => ProductAvailabilityStatus::Available,
                 'unavailable_reason' => null,
+                'display_order' => $order,
+            ],
+        );
+    }
+
+    private function modifierGroup(
+        Merchant $merchant,
+        Product $product,
+        string $name,
+        ModifierSelectionType $selectionType,
+        int $minSelection,
+        ?int $maxSelection,
+        bool $isRequired,
+        int $order,
+    ): ProductModifierGroup {
+        return ProductModifierGroup::query()->updateOrCreate(
+            ['product_id' => $product->id, 'name' => $name],
+            [
+                'merchant_id' => $merchant->id,
+                'description' => null,
+                'selection_type' => $selectionType,
+                'min_selection' => $minSelection,
+                'max_selection' => $maxSelection,
+                'is_required' => $isRequired,
+                'status' => CatalogStatus::Active,
+                'display_order' => $order,
+            ],
+        );
+    }
+
+    private function modifier(
+        Merchant $merchant,
+        ProductModifierGroup $group,
+        string $name,
+        int $price,
+        int $order,
+        bool $isDefault = false,
+    ): ProductModifier {
+        return ProductModifier::query()->updateOrCreate(
+            ['modifier_group_id' => $group->id, 'name' => $name],
+            [
+                'merchant_id' => $merchant->id,
+                'description' => null,
+                'price' => $price,
+                'status' => CatalogStatus::Active,
+                'is_default' => $isDefault,
                 'display_order' => $order,
             ],
         );

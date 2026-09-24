@@ -5,6 +5,7 @@ namespace App\Modules\Merchant\Http\Merchants;
 use App\Modules\Geography\Contracts\GeographyLookup;
 use App\Modules\IdentityAccess\Contracts\UserLookup;
 use App\Modules\Merchant\Domain\Models\Merchant;
+use App\Modules\Merchant\Http\Merchants\Requests\IndexMerchantRequest;
 use App\Modules\Merchant\Http\Resources\MerchantDetailResource;
 use App\Modules\Merchant\Http\Resources\MerchantResource;
 use App\Modules\Payout\Contracts\DataTransferObjects\PayoutAccountData;

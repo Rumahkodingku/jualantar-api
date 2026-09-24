@@ -11,11 +11,14 @@ use App\Modules\Merchant\Domain\Models\MerchantOutletUser;
 use App\Modules\Merchant\Domain\Models\OutletProduct;
 use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Domain\Models\ProductMedia;
+use App\Modules\Merchant\Domain\Models\ProductModifier;
+use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Modules\Merchant\Domain\Models\ProductVariant;
 use App\Modules\Storage\Contracts\DataTransferObjects\StoredObject;
 use App\Modules\Storage\Contracts\DataTransferObjects\TemporaryUpload;
 use App\Modules\Storage\Contracts\ObjectStorage;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
@@ -314,4 +317,52 @@ it('lets a manager reorder but forbids staff', function () {
     ])
         ->assertStatus(403)
         ->assertJsonPath('code', 'outlet_capability_forbidden');
+});
+
+it('exposes only active modifier groups and modifiers in the outlet catalog', function () {
+    ['owner' => $owner, 'outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+    $product = sellableProduct($outlet, $category);
+
+    $active = ProductModifierGroup::factory()->forProduct($product)->active()->create(['name' => 'Aktif', 'display_order' => 1]);
+    ProductModifier::factory()->forGroup($active)->create(['name' => 'Aktif Mod', 'display_order' => 1]);
+    ProductModifier::factory()->forGroup($active)->inactive()->create(['name' => 'Nonaktif Mod', 'display_order' => 2]);
+    ProductModifierGroup::factory()->forProduct($product)->inactive()->create(['name' => 'Nonaktif Group', 'display_order' => 2]);
+
+    Sanctum::actingAs($owner);
+
+    $this->getJson(outletCatalogUrl($outlet))
+        ->assertOk()
+        ->assertJsonCount(1, 'data.0.modifier_groups')
+        ->assertJsonPath('data.0.modifier_groups.0.name', 'Aktif')
+        ->assertJsonCount(1, 'data.0.modifier_groups.0.modifiers')
+        ->assertJsonPath('data.0.modifier_groups.0.modifiers.0.name', 'Aktif Mod')
+        ->assertJsonPath('data.0.is_sellable', true);
+});
+
+it('eager loads modifier groups to avoid an N+1 in the outlet catalog', function () {
+    ['owner' => $owner, 'outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+
+    $products = collect(range(1, 5))
+        ->map(fn (int $i) => sellableProduct($outlet, $category, ['name' => "Produk {$i}"]));
+
+    Sanctum::actingAs($owner);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $this->getJson(outletCatalogUrl($outlet))->assertOk()->assertJsonCount(5, 'data');
+    $baseline = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    foreach ($products as $product) {
+        $group = ProductModifierGroup::factory()->forProduct($product)->active()->create();
+        ProductModifier::factory()->forGroup($group)->count(3)->create();
+    }
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $this->getJson(outletCatalogUrl($outlet))->assertOk()->assertJsonCount(5, 'data');
+    $withModifiers = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    expect($withModifiers - $baseline)->toBeLessThanOrEqual(3);
 });

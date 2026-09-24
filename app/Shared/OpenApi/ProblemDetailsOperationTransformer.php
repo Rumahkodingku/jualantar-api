@@ -70,6 +70,12 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
         'api.v1.merchant.catalog.products.media.upload_url',
         'api.v1.merchant.catalog.products.media.store',
         'api.v1.merchant.catalog.products.outlets.store',
+        'api.v1.merchant.catalog.products.modifier_groups.store',
+        'api.v1.merchant.catalog.products.modifier_groups.update',
+        'api.v1.merchant.catalog.products.modifier_groups.activate',
+        'api.v1.merchant.catalog.products.modifier_groups.modifiers.store',
+        'api.v1.merchant.catalog.products.modifier_groups.modifiers.destroy',
+        'api.v1.merchant.catalog.products.modifier_groups.modifiers.deactivate',
     ];
 
     public function __construct(private readonly OpenApi $openApi) {}
@@ -81,11 +87,11 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
         $middleware = collect($routeInfo->route->gatherMiddleware());
 
         $hasAuth = $middleware->contains(
-            fn ($m) => is_string($m) && ($m === 'auth' || Str::startsWith($m, 'auth:')),
+            fn($m) => is_string($m) && ($m === 'auth' || Str::startsWith($m, 'auth:')),
         );
 
         $hasAuthorization = $middleware->contains(
-            fn ($m) => is_string($m) && Str::startsWith($m, self::AUTHORIZATION_MIDDLEWARE),
+            fn($m) => is_string($m) && Str::startsWith($m, self::AUTHORIZATION_MIDDLEWARE),
         );
 
         $statuses = [];
@@ -164,7 +170,7 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
     private function hasModelParameter(Operation $operation): bool
     {
         return collect($operation->parameters)->contains(
-            fn ($parameter) => $parameter->in === 'path'
+            fn($parameter) => $parameter->in === 'path'
                 && $parameter->schema?->type?->getAttribute('isModelId') === true,
         );
     }

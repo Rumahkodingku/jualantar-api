@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Modules\Merchant\Http\Account;
+namespace App\Modules\Merchant\Http\Account\Requests;
 
 use App\Shared\Support\Phone;
 use Illuminate\Foundation\Http\FormRequest;
