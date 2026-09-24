@@ -41,6 +41,7 @@ return [
 
     'uploads' => [
         'max_size' => (int) env('STORAGE_UPLOAD_MAX_SIZE', 5 * 1024 * 1024),
+        'max_product_media' => (int) env('STORAGE_PRODUCT_MEDIA_MAX', 10),
         'allowed_mime_types' => [
             'image/jpeg',
             'image/png',

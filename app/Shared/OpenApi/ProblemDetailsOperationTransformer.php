@@ -24,6 +24,33 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
     private const SCHEMA_NAME = 'ProblemDetails';
 
     /**
+     * Middleware aliases that authorize the caller, so the operation may return
+     * a 403 problem response. Covers the Spatie ability middleware plus the
+     * merchant context gates used by the merchant APIs.
+     *
+     * @var list<string>
+     */
+    private const AUTHORIZATION_MIDDLEWARE = [
+        'permission:',
+        'role:',
+        'can:',
+        'merchant.context',
+        'merchant.owner',
+    ];
+
+    /**
+     * Route name prefixes whose actions resolve tenant-scoped resources with an
+     * explicit lookup instead of route model binding, so they may return a 404
+     * even though no path parameter is a bound model. Add a prefix here when a
+     * new area follows the same "not found for another tenant" convention.
+     *
+     * @var list<string>
+     */
+    private const NOT_FOUND_ROUTE_PREFIXES = [
+        'api.v1.merchant.catalog.',
+    ];
+
+    /**
      * Routes whose action may return a 409 conflict response.
      *
      * @var list<string>
@@ -36,6 +63,13 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
         'api.v1.roles.destroy',
         'api.v1.permissions.store',
         'api.v1.permissions.destroy',
+        'api.v1.merchant.catalog.categories.destroy',
+        'api.v1.merchant.catalog.products.activate',
+        'api.v1.merchant.catalog.products.variants.deactivate',
+        'api.v1.merchant.catalog.products.variants.destroy',
+        'api.v1.merchant.catalog.products.media.upload_url',
+        'api.v1.merchant.catalog.products.media.store',
+        'api.v1.merchant.catalog.products.outlets.store',
     ];
 
     public function __construct(private readonly OpenApi $openApi) {}
@@ -50,8 +84,8 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
             fn ($m) => is_string($m) && ($m === 'auth' || Str::startsWith($m, 'auth:')),
         );
 
-        $hasPermission = $middleware->contains(
-            fn ($m) => is_string($m) && Str::startsWith($m, ['permission:', 'role:', 'can:']),
+        $hasAuthorization = $middleware->contains(
+            fn ($m) => is_string($m) && Str::startsWith($m, self::AUTHORIZATION_MIDDLEWARE),
         );
 
         $statuses = [];
@@ -62,11 +96,11 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
             $statuses[401] = 'Unauthenticated.';
         }
 
-        if ($hasPermission || isset($existing[403])) {
+        if ($hasAuthorization || isset($existing[403])) {
             $statuses[403] = 'Forbidden.';
         }
 
-        if ($this->hasModelParameter($operation) || isset($existing[404])) {
+        if ($this->hasModelParameter($operation) || $this->mayReturnNotFound($routeInfo) || isset($existing[404])) {
             $statuses[404] = 'The requested resource was not found.';
         }
 
@@ -87,6 +121,17 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
         }
 
         $this->stripNoContentBodies($operation);
+    }
+
+    private function mayReturnNotFound(RouteInfo $routeInfo): bool
+    {
+        $name = $routeInfo->route->getName();
+
+        if ($name === null) {
+            return false;
+        }
+
+        return Str::startsWith($name, self::NOT_FOUND_ROUTE_PREFIXES);
     }
 
     private function problemReference(): Reference

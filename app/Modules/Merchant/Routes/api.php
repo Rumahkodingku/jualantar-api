@@ -3,6 +3,12 @@
 use App\Modules\Merchant\Http\Account\MerchantAccountController;
 use App\Modules\Merchant\Http\Approval\MerchantApprovalController;
 use App\Modules\Merchant\Http\Catalog\MerchantController;
+use App\Modules\Merchant\Http\CatalogProducts\CategoryController;
+use App\Modules\Merchant\Http\CatalogProducts\OutletCatalogController;
+use App\Modules\Merchant\Http\CatalogProducts\ProductController;
+use App\Modules\Merchant\Http\CatalogProducts\ProductMediaController;
+use App\Modules\Merchant\Http\CatalogProducts\ProductOutletController;
+use App\Modules\Merchant\Http\CatalogProducts\ProductVariantController;
 use App\Modules\Merchant\Http\Operations\MerchantOperationsController;
 use App\Modules\Merchant\Http\Operations\OperatingHoursController;
 use App\Modules\Merchant\Http\Operations\OutletOperationsController;
@@ -99,6 +105,94 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
         Route::get('/outlets/{outlet}/availability', [OutletOperationsController::class, 'availability'])
             ->whereUuid('outlet')->name('outlets.availability');
     });
+
+    Route::middleware(['auth:sanctum', 'merchant.context'])
+        ->prefix('merchant/catalog')
+        ->name('merchant.catalog.')
+        ->group(function (): void {
+            Route::middleware('merchant.owner')->group(function (): void {
+                Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+                Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+                Route::put('/categories/order', [CategoryController::class, 'reorder'])->name('categories.order');
+                Route::get('/categories/{category}', [CategoryController::class, 'show'])
+                    ->whereUuid('category')->name('categories.show');
+                Route::patch('/categories/{category}', [CategoryController::class, 'update'])
+                    ->whereUuid('category')->name('categories.update');
+                Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])
+                    ->whereUuid('category')->name('categories.destroy');
+                Route::post('/categories/{category}/activate', [CategoryController::class, 'activate'])
+                    ->whereUuid('category')->name('categories.activate');
+                Route::post('/categories/{category}/deactivate', [CategoryController::class, 'deactivate'])
+                    ->whereUuid('category')->name('categories.deactivate');
+
+                Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+                Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+                Route::put('/products/order', [ProductController::class, 'reorder'])->name('products.order');
+                Route::get('/products/{product}', [ProductController::class, 'show'])
+                    ->whereUuid('product')->name('products.show');
+                Route::patch('/products/{product}', [ProductController::class, 'update'])
+                    ->whereUuid('product')->name('products.update');
+                Route::delete('/products/{product}', [ProductController::class, 'destroy'])
+                    ->whereUuid('product')->name('products.destroy');
+                Route::post('/products/{product}/activate', [ProductController::class, 'activate'])
+                    ->whereUuid('product')->name('products.activate');
+                Route::post('/products/{product}/deactivate', [ProductController::class, 'deactivate'])
+                    ->whereUuid('product')->name('products.deactivate');
+
+                Route::get('/products/{product}/variants', [ProductVariantController::class, 'index'])
+                    ->whereUuid('product')->name('products.variants.index');
+                Route::post('/products/{product}/variants', [ProductVariantController::class, 'store'])
+                    ->whereUuid('product')->name('products.variants.store');
+                Route::put('/products/{product}/variants/order', [ProductVariantController::class, 'reorder'])
+                    ->whereUuid('product')->name('products.variants.order');
+                Route::get('/products/{product}/variants/{variant}', [ProductVariantController::class, 'show'])
+                    ->whereUuid('product')->whereUuid('variant')->name('products.variants.show');
+                Route::patch('/products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
+                    ->whereUuid('product')->whereUuid('variant')->name('products.variants.update');
+                Route::delete('/products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])
+                    ->whereUuid('product')->whereUuid('variant')->name('products.variants.destroy');
+                Route::post('/products/{product}/variants/{variant}/activate', [ProductVariantController::class, 'activate'])
+                    ->whereUuid('product')->whereUuid('variant')->name('products.variants.activate');
+                Route::post('/products/{product}/variants/{variant}/deactivate', [ProductVariantController::class, 'deactivate'])
+                    ->whereUuid('product')->whereUuid('variant')->name('products.variants.deactivate');
+
+                Route::get('/products/{product}/media', [ProductMediaController::class, 'index'])
+                    ->whereUuid('product')->name('products.media.index');
+                Route::post('/products/{product}/media/upload-url', [ProductMediaController::class, 'storeUploadUrl'])
+                    ->whereUuid('product')->name('products.media.upload_url');
+                Route::post('/products/{product}/media', [ProductMediaController::class, 'store'])
+                    ->whereUuid('product')->name('products.media.store');
+                Route::put('/products/{product}/media/order', [ProductMediaController::class, 'reorder'])
+                    ->whereUuid('product')->name('products.media.order');
+                Route::get('/products/{product}/media/{media}', [ProductMediaController::class, 'show'])
+                    ->whereUuid('product')->whereUuid('media')->name('products.media.show');
+                Route::delete('/products/{product}/media/{media}', [ProductMediaController::class, 'destroy'])
+                    ->whereUuid('product')->whereUuid('media')->name('products.media.destroy');
+                Route::post('/products/{product}/media/{media}/primary', [ProductMediaController::class, 'setPrimary'])
+                    ->whereUuid('product')->whereUuid('media')->name('products.media.primary');
+
+                Route::get('/products/{product}/outlets', [ProductOutletController::class, 'index'])
+                    ->whereUuid('product')->name('products.outlets.index');
+                Route::post('/products/{product}/outlets', [ProductOutletController::class, 'store'])
+                    ->whereUuid('product')->name('products.outlets.store');
+                Route::put('/products/{product}/outlets', [ProductOutletController::class, 'replace'])
+                    ->whereUuid('product')->name('products.outlets.replace');
+                Route::delete('/products/{product}/outlets/{outlet}', [ProductOutletController::class, 'destroy'])
+                    ->whereUuid('product')->whereUuid('outlet')->name('products.outlets.destroy');
+            });
+
+            Route::post('/products/{product}/outlets/{outlet}/activate', [ProductOutletController::class, 'activate'])
+                ->whereUuid('product')->whereUuid('outlet')->name('products.outlets.activate');
+            Route::post('/products/{product}/outlets/{outlet}/deactivate', [ProductOutletController::class, 'deactivate'])
+                ->whereUuid('product')->whereUuid('outlet')->name('products.outlets.deactivate');
+            Route::post('/products/{product}/outlets/{outlet}/availability', [ProductOutletController::class, 'availability'])
+                ->whereUuid('product')->whereUuid('outlet')->name('products.outlets.availability');
+
+            Route::get('/outlets/{outlet}/products', [OutletCatalogController::class, 'index'])
+                ->whereUuid('outlet')->name('outlets.products.index');
+            Route::put('/outlets/{outlet}/products/order', [OutletCatalogController::class, 'reorder'])
+                ->whereUuid('outlet')->name('outlets.products.order');
+        });
 
     Route::middleware(['auth:sanctum'])->prefix('admin/merchant-approvals')->name('admin.merchant_approvals.')->group(function () {
         Route::get('/summary', [MerchantApprovalController::class, 'summary'])

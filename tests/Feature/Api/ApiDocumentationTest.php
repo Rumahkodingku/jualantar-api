@@ -57,6 +57,39 @@ it('secures protected routes with bearer auth and keeps public routes unsecured'
         ->and($spec['paths']['/v1/auth/me']['get'])->not->toHaveKey('security');
 });
 
+it('documents the merchant catalog endpoints', function () {
+    $spec = $this->getJson('/docs/api.json')->json();
+
+    expect($spec['paths'])->toHaveKeys([
+        '/v1/merchant/catalog/categories',
+        '/v1/merchant/catalog/categories/order',
+        '/v1/merchant/catalog/categories/{category}',
+        '/v1/merchant/catalog/products',
+        '/v1/merchant/catalog/products/order',
+        '/v1/merchant/catalog/products/{product}',
+        '/v1/merchant/catalog/products/{product}/variants',
+        '/v1/merchant/catalog/products/{product}/variants/order',
+        '/v1/merchant/catalog/products/{product}/media',
+        '/v1/merchant/catalog/products/{product}/media/upload-url',
+        '/v1/merchant/catalog/products/{product}/media/order',
+        '/v1/merchant/catalog/products/{product}/outlets',
+        '/v1/merchant/catalog/products/{product}/outlets/{outlet}/availability',
+        '/v1/merchant/catalog/outlets/{outlet}/products',
+        '/v1/merchant/catalog/outlets/{outlet}/products/order',
+    ]);
+
+    expect($spec['paths']['/v1/merchant/catalog/products']['post']['responses'])
+        ->toHaveKeys(['201', '401', '403', '404', '422'])
+        ->and($spec['paths']['/v1/merchant/catalog/products/{product}/activate']['post']['responses'])
+        ->toHaveKeys(['200', '401', '403', '404', '409'])
+        ->and($spec['paths']['/v1/merchant/catalog/categories/{category}']['delete']['responses'])
+        ->toHaveKeys(['204', '401', '403', '404', '409'])
+        ->and($spec['paths']['/v1/merchant/catalog/categories']['post']['responses']['201']['content']['application/json']['schema']['properties']['data']['$ref'])
+        ->toBe('#/components/schemas/CatalogCategoryResource')
+        ->and($spec['paths']['/v1/merchant/catalog/outlets/{outlet}/products']['get']['responses']['403']['content']['application/problem+json']['schema']['$ref'])
+        ->toBe('#/components/schemas/ProblemDetails');
+});
+
 it('documents the success envelope for endpoints backed by the result pattern', function () {
     $spec = $this->getJson('/docs/api.json')->json();
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Shell(vendor/bin/pest:*)",
+      "Shell(vendor/bin/pint:*)"
+    ],
+    "deny": [],
+    "defaultMode": "default"
+  }
+}

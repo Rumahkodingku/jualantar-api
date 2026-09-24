@@ -36,6 +36,10 @@ final class OutletRoleCapabilityResolver
                 'merchant.operations.service_area.view',
                 'merchant.operations.service_area.update',
                 'merchant.operations.availability.view',
+                'merchant.operations.catalog.view',
+                'merchant.operations.catalog.availability.update',
+                'merchant.operations.catalog.assignment.status.update',
+                'merchant.operations.catalog.order.update',
             ],
             OutletUserRole::OutletStaff => [
                 'merchant.operations.view',
@@ -43,6 +47,8 @@ final class OutletRoleCapabilityResolver
                 'merchant.operations.hours.view',
                 'merchant.operations.service_area.view',
                 'merchant.operations.availability.view',
+                'merchant.operations.catalog.view',
+                'merchant.operations.catalog.availability.update',
             ],
         };
     }

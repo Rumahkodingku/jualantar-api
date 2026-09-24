@@ -20,6 +20,10 @@ it('resolves the full capability list for an outlet manager', function () {
         'merchant.operations.service_area.view',
         'merchant.operations.service_area.update',
         'merchant.operations.availability.view',
+        'merchant.operations.catalog.view',
+        'merchant.operations.catalog.availability.update',
+        'merchant.operations.catalog.assignment.status.update',
+        'merchant.operations.catalog.order.update',
     ]);
 });
 
@@ -32,6 +36,8 @@ it('resolves the read-only capability list for outlet staff', function () {
         'merchant.operations.hours.view',
         'merchant.operations.service_area.view',
         'merchant.operations.availability.view',
+        'merchant.operations.catalog.view',
+        'merchant.operations.catalog.availability.update',
     ]);
 });
 

@@ -42,6 +42,7 @@ arch('the API response helper is only used by module controllers')
         'App\Modules\Merchant\Http\Account',
         'App\Modules\Merchant\Http\Approval',
         'App\Modules\Merchant\Http\Catalog',
+        'App\Modules\Merchant\Http\CatalogProducts',
         'App\Modules\Merchant\Http\Operations',
         'App\Modules\Merchant\Http\Registration',
         'App\Modules\Notifications\Http\Controllers',

@@ -9,7 +9,12 @@ use App\Modules\Geography\Domain\Models\Regency;
 use App\Modules\Geography\Domain\Models\Village;
 use App\Modules\IdentityAccess\Database\Seeders\RbacSeeder;
 use App\Modules\IdentityAccess\Domain\Models\User;
+use App\Modules\Merchant\Domain\Models\CatalogCategory;
 use App\Modules\Merchant\Domain\Models\Merchant;
+use App\Modules\Merchant\Domain\Models\OutletProduct;
+use App\Modules\Merchant\Domain\Models\Product;
+use App\Modules\Merchant\Domain\Models\ProductMedia;
+use App\Modules\Merchant\Domain\Models\ProductVariant;
 use App\Modules\Payout\Domain\Enums\PayoutOwnerType;
 use App\Modules\Payout\Domain\Models\PayoutAccount;
 use App\Modules\Service\Domain\Models\Service;
@@ -159,6 +164,46 @@ trait InteractsWithModules
     protected function newMerchant(array $attributes = []): Merchant
     {
         return Merchant::factory()->create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newCatalogCategory(array $attributes = []): CatalogCategory
+    {
+        return CatalogCategory::factory()->create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newProduct(array $attributes = []): Product
+    {
+        return Product::factory()->create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newProductVariant(array $attributes = []): ProductVariant
+    {
+        return ProductVariant::factory()->create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newProductMedia(array $attributes = []): ProductMedia
+    {
+        return ProductMedia::factory()->create($attributes);
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function newOutletProduct(array $attributes = []): OutletProduct
+    {
+        return OutletProduct::factory()->create($attributes);
     }
 
     /**
