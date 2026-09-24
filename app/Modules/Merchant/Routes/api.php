@@ -2,13 +2,13 @@
 
 use App\Modules\Merchant\Http\Account\MerchantAccountController;
 use App\Modules\Merchant\Http\Approval\MerchantApprovalController;
-use App\Modules\Merchant\Http\Catalog\MerchantController;
-use App\Modules\Merchant\Http\CatalogProducts\CategoryController;
-use App\Modules\Merchant\Http\CatalogProducts\OutletCatalogController;
-use App\Modules\Merchant\Http\CatalogProducts\ProductController;
-use App\Modules\Merchant\Http\CatalogProducts\ProductMediaController;
-use App\Modules\Merchant\Http\CatalogProducts\ProductOutletController;
-use App\Modules\Merchant\Http\CatalogProducts\ProductVariantController;
+use App\Modules\Merchant\Http\Catalog\CategoryController;
+use App\Modules\Merchant\Http\Catalog\OutletCatalogController;
+use App\Modules\Merchant\Http\Catalog\ProductController;
+use App\Modules\Merchant\Http\Catalog\ProductMediaController;
+use App\Modules\Merchant\Http\Catalog\ProductOutletController;
+use App\Modules\Merchant\Http\Catalog\ProductVariantController;
+use App\Modules\Merchant\Http\Merchants\MerchantController;
 use App\Modules\Merchant\Http\Operations\MerchantOperationsController;
 use App\Modules\Merchant\Http\Operations\OperatingHoursController;
 use App\Modules\Merchant\Http\Operations\OutletOperationsController;
