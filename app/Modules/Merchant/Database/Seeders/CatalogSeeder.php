@@ -13,7 +13,6 @@ use App\Modules\Merchant\Domain\Models\ProductVariant;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-
 class CatalogSeeder extends Seeder
 {
     public function run(): void

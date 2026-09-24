@@ -21,17 +21,12 @@ final class RegisterAccount
         private readonly EmailVerification $emailVerification,
     ) {}
 
-    /**
-     * Register a merchant identity account and send the verification email.
-     *
-     * @param  array{email: string, phone: string, password: string}  $data
-     */
     public function __invoke(array $data): Result
     {
         $phone = Phone::normalize($data['phone']);
 
         try {
-            $user = DB::transaction(fn (): UserData => $this->userProvisioning->provisionMerchant([
+            $user = DB::transaction(fn(): UserData => $this->userProvisioning->provisionMerchant([
                 'email' => $data['email'],
                 'phone' => $phone,
                 'password' => $data['password'],

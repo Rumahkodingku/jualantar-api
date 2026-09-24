@@ -48,23 +48,23 @@ trait BuildsApplicationSnapshot
                 ? null
                 : $this->subject('service', $merchant->service_id, $serviceData ?? ['id' => $merchant->service_id]),
             'merchant_category' => $merchant->categories
-                ->map(fn ($category): array => $this->subject('merchant_category', $category->id, [
+                ->map(fn($category): array => $this->subject('merchant_category', $category->id, [
                     'id' => $category->id,
                     'category_id' => $category->category_id,
                 ]))
                 ->values()
                 ->all(),
             'merchant_outlet' => $merchant->outlets
-                ->filter(fn ($outlet): bool => $outlet->status === OutletStatus::Active)
-                ->map(fn (MerchantOutlet $outlet): array => $this->subject('merchant_outlet', $outlet->id, $this->outletData($outlet)))
+                ->filter(fn($outlet): bool => $outlet->status === OutletStatus::Active)
+                ->map(fn(MerchantOutlet $outlet): array => $this->subject('merchant_outlet', $outlet->id, $this->outletData($outlet)))
                 ->values()
                 ->all(),
             'merchant_document' => $merchant->documents
-                ->map(fn (MerchantDocument $document): array => $this->subject('merchant_document', $document->id, $this->documentData($document)))
+                ->map(fn(MerchantDocument $document): array => $this->subject('merchant_document', $document->id, $this->documentData($document)))
                 ->values()
                 ->all(),
             'payout_account' => array_map(
-                fn (PayoutAccountData $account): array => $this->subject('payout_account', $account->id, [
+                fn(PayoutAccountData $account): array => $this->subject('payout_account', $account->id, [
                     'id' => $account->id,
                     'bank_id' => $account->bankId,
                     'bank_name' => $account->bankName,
