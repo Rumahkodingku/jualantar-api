@@ -42,4 +42,25 @@ return [
         'timezone' => env('MERCHANT_OPERATIONS_TIMEZONE', 'Asia/Jakarta'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Product Draft
+    |--------------------------------------------------------------------------
+    |
+    | The catalog "add product" wizard is long and lossy on a phone, so the
+    | in-progress form is persisted server-side and resumed on the next visit.
+    | A merchant keeps at most one draft; every save pushes its expiry back.
+    | The limits only bound the payload, they never require it to be complete.
+    |
+    */
+
+    'product_draft' => [
+        'ttl_days' => (int) env('MERCHANT_PRODUCT_DRAFT_TTL_DAYS', 7),
+        'max_variants' => (int) env('MERCHANT_PRODUCT_DRAFT_MAX_VARIANTS', 50),
+        'max_modifier_groups' => (int) env('MERCHANT_PRODUCT_DRAFT_MAX_GROUPS', 25),
+        'max_modifiers_per_group' => (int) env('MERCHANT_PRODUCT_DRAFT_MAX_MODIFIERS', 30),
+        'max_outlets' => (int) env('MERCHANT_PRODUCT_DRAFT_MAX_OUTLETS', 100),
+        'preview_url_ttl' => (int) env('MERCHANT_PRODUCT_DRAFT_PREVIEW_TTL', 3600),
+    ],
+
 ];

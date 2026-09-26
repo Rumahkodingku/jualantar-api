@@ -76,6 +76,8 @@ final class ProblemDetailsOperationTransformer implements OperationTransformer
         'api.v1.merchant.catalog.products.modifier_groups.modifiers.store',
         'api.v1.merchant.catalog.products.modifier_groups.modifiers.destroy',
         'api.v1.merchant.catalog.products.modifier_groups.modifiers.deactivate',
+        'api.v1.merchant.catalog.product_draft.save',
+        'api.v1.merchant.catalog.product_draft.media.upload_url',
     ];
 
     public function __construct(private readonly OpenApi $openApi) {}

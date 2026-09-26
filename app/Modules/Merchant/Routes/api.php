@@ -5,6 +5,7 @@ use App\Modules\Merchant\Http\Approval\MerchantApprovalController;
 use App\Modules\Merchant\Http\Catalog\CategoryController;
 use App\Modules\Merchant\Http\Catalog\OutletCatalogController;
 use App\Modules\Merchant\Http\Catalog\ProductController;
+use App\Modules\Merchant\Http\Catalog\ProductDraftController;
 use App\Modules\Merchant\Http\Catalog\ProductMediaController;
 use App\Modules\Merchant\Http\Catalog\ProductModifierController;
 use App\Modules\Merchant\Http\Catalog\ProductModifierGroupController;
@@ -126,6 +127,17 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
                     ->whereUuid('category')->name('categories.activate');
                 Route::post('/categories/{category}/deactivate', [CategoryController::class, 'deactivate'])
                     ->whereUuid('category')->name('categories.deactivate');
+
+                Route::get('/product-draft', [ProductDraftController::class, 'show'])
+                    ->name('product_draft.show');
+                Route::put('/product-draft', [ProductDraftController::class, 'save'])
+                    ->name('product_draft.save');
+                Route::delete('/product-draft', [ProductDraftController::class, 'destroy'])
+                    ->name('product_draft.destroy');
+                Route::post('/product-draft/media/upload-url', [ProductDraftController::class, 'storeUploadUrl'])
+                    ->name('product_draft.media.upload_url');
+                Route::delete('/product-draft/media', [ProductDraftController::class, 'destroyMedia'])
+                    ->name('product_draft.media.destroy');
 
                 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
                 Route::post('/products', [ProductController::class, 'store'])->name('products.store');

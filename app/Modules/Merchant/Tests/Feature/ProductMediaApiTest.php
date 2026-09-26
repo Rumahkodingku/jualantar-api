@@ -5,69 +5,18 @@ use App\Modules\Merchant\Domain\Models\CatalogCategory;
 use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Domain\Models\ProductMedia;
-use App\Modules\Storage\Contracts\DataTransferObjects\StoredObject;
-use App\Modules\Storage\Contracts\DataTransferObjects\TemporaryUpload;
 use App\Modules\Storage\Contracts\ObjectStorage;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
+use Tests\Support\FakeObjectStorage;
 
 beforeEach(function () {
     $this->seedRbac();
 });
 
-/**
- * In-memory object storage double: only the objects explicitly registered in
- * `$objects` exist, and `delete()` calls are recorded for assertions.
- */
-function fakeCatalogObjectStorage(): ObjectStorage
+function fakeCatalogObjectStorage(): ObjectStorage&FakeObjectStorage
 {
-    return new class implements ObjectStorage
-    {
-        /** @var array<string, int> */
-        public array $objects = [];
-
-        /** @var list<string> */
-        public array $deleted = [];
-
-        public string $mimeType = 'image/jpeg';
-
-        public function put(string $path, string $contents, string $contentType): StoredObject
-        {
-            throw new LogicException('Not used in this test.');
-        }
-
-        public function putFile(string $path, UploadedFile $file): StoredObject
-        {
-            throw new LogicException('Not used in this test.');
-        }
-
-        public function exists(string $path): bool
-        {
-            return array_key_exists($path, $this->objects);
-        }
-
-        public function metadata(string $path): StoredObject
-        {
-            return new StoredObject($path, 'local', $this->objects[$path] ?? 0, $this->mimeType);
-        }
-
-        public function delete(string $path): void
-        {
-            $this->deleted[] = $path;
-            unset($this->objects[$path]);
-        }
-
-        public function temporaryUrl(string $path, DateTimeInterface $expiresAt, array $options = []): string
-        {
-            return 'https://storage.test/'.$path;
-        }
-
-        public function temporaryUploadUrl(string $path, DateTimeInterface $expiresAt, string $contentType, array $options = []): TemporaryUpload
-        {
-            return new TemporaryUpload('https://upload.test/'.$path, ['Content-Type' => $contentType], $path, $expiresAt);
-        }
-    };
+    return new FakeObjectStorage;
 }
 
 /**

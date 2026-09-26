@@ -118,6 +118,10 @@ final class ProblemDetailsFactory
 
     /**
      * Build a problem response from a business Result failure.
+     *
+     * Machine-readable context travels as a `context` extension member so a
+     * client can act on a conflict (the current draft version, the conflicting
+     * key) without parsing the human-readable detail.
      */
     public function problemFromResultError(ResultError $error, ?Request $request = null): JsonResponse
     {
@@ -128,6 +132,7 @@ final class ProblemDetailsFactory
             detail: $error->message,
             request: $request,
             errors: $error->fields,
+            extensions: $error->context === [] ? [] : ['context' => $error->context],
         );
     }
 
