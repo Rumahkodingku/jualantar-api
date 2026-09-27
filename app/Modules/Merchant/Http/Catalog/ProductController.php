@@ -10,6 +10,7 @@ use App\Modules\Merchant\Application\Catalog\Actions\ReorderProducts;
 use App\Modules\Merchant\Application\Catalog\Actions\UpdateProduct;
 use App\Modules\Merchant\Application\Catalog\Services\CatalogAuthorization;
 use App\Modules\Merchant\Application\Catalog\Services\MediaUrlHydrator;
+use App\Modules\Merchant\Domain\Enums\CatalogStatus;
 use App\Modules\Merchant\Domain\Models\Merchant;
 use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Http\Catalog\Requests\IndexProductRequest;
@@ -61,7 +62,7 @@ class ProductController extends Controller
             fn (Merchant $merchant) => ApiResponse::fromResult(
                 ($this->createProduct)($merchant, $request->validated()),
                 fn (Product $product) => ApiResponse::created(
-                    new ProductResource($product),
+                    $this->productResource($product),
                     route('api.v1.merchant.catalog.products.show', ['product' => $product->id]),
                 ),
             ),
@@ -95,7 +96,7 @@ class ProductController extends Controller
             $this->authorization->product($product),
             fn (Product $model) => ApiResponse::fromResult(
                 ($this->updateProduct)($model, $request->validated()),
-                fn (Product $updated) => ApiResponse::success(new ProductResource($updated)),
+                fn (Product $updated) => ApiResponse::success($this->productResource($updated)),
             ),
         );
     }
@@ -147,9 +148,36 @@ class ProductController extends Controller
             $this->authorization->product($product),
             fn (Product $model) => ApiResponse::fromResult(
                 $action($model),
-                fn (Product $updated) => ApiResponse::success(new ProductResource($updated)),
+                fn (Product $updated) => ApiResponse::success($this->productResource($updated)),
             ),
         );
+    }
+
+    /**
+     * Product payloads always carry the primary media, so the single-product
+     * write paths pay the one extra query instead of returning a null cover.
+     * The list aggregates stay out of these responses; the card is the only
+     * consumer and it reads them from the index.
+     */
+    private function productResource(Product $product): ProductResource
+    {
+        $product->loadMissing([
+            'category',
+            'media' => fn ($relation) => $this->primaryMedia($relation),
+        ]);
+        $this->mediaUrls->hydrate($product->media);
+
+        return new ProductResource($product);
+    }
+
+    private function primaryMedia(mixed $relation): mixed
+    {
+        return $relation->where('is_primary', true);
+    }
+
+    private function activeVariants(mixed $relation): mixed
+    {
+        return $relation->where('status', CatalogStatus::Active);
     }
 
     /**
@@ -157,7 +185,21 @@ class ProductController extends Controller
      */
     private function list(Merchant $merchant, array $validated): JsonResponse
     {
-        $query = Product::query()->where('merchant_id', $merchant->id);
+        $query = Product::query()
+            ->where('merchant_id', $merchant->id)
+            ->with([
+                'category',
+                'media' => fn ($relation) => $this->primaryMedia($relation),
+            ])
+            ->withCount([
+                'variants as variants_count' => fn ($relation) => $this->activeVariants($relation),
+                'media as media_count',
+                'modifierGroups as modifier_groups_count',
+            ])
+            ->withMin(
+                ['variants as min_price' => fn ($relation) => $this->activeVariants($relation)],
+                'price',
+            );
 
         if (filled($search = $validated['search'] ?? null)) {
             $query->where('name', 'ilike', "%{$search}%");
@@ -180,6 +222,10 @@ class ProductController extends Controller
             ->orderBy('id');
 
         $paginator = $query->paginate($validated['per_page'] ?? 15)->withQueryString();
+
+        foreach ($paginator->items() as $product) {
+            $this->mediaUrls->hydrate($product->media);
+        }
 
         return ApiResponse::paginated($paginator, ProductResource::collection($paginator->items()));
     }

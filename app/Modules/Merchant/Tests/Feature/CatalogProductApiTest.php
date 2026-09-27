@@ -294,6 +294,161 @@ it('filters and sorts the product list', function () {
         ->assertOk()->assertJsonPath('data.0.name', 'Kopi');
 });
 
+it('exposes the primary media on the product list', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+        'name' => 'Es Teh',
+        'display_order' => 1,
+    ]);
+    ProductMedia::factory()->forProduct($product)->create(['alt_text' => 'Gambar lain']);
+    ProductMedia::factory()->forProduct($product)->primary()->create(['alt_text' => 'Foto utama']);
+    $withoutMedia = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+        'name' => 'Kopi',
+        'display_order' => 2,
+    ]);
+    Sanctum::actingAs($owner);
+
+    $response = $this->getJson(PRODUCTS_URL)
+        ->assertOk()
+        ->assertJsonPath('data.0.primary_media.alt_text', 'Foto utama')
+        ->assertJsonPath('data.1.primary_media', null);
+
+    expect($response->json('data.0.primary_media.url'))->toBeString()->not->toBeEmpty();
+
+    $this->getJson(PRODUCTS_URL.'?search=kopi')
+        ->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.primary_media', null);
+
+    $this->getJson(PRODUCTS_URL.'/'.$withoutMedia->id)
+        ->assertOk()->assertJsonPath('data.primary_media', null);
+});
+
+it('returns a null primary media when no media is marked as primary', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+    ]);
+    ProductMedia::factory()->forProduct($product)->create();
+    Sanctum::actingAs($owner);
+
+    $this->getJson(PRODUCTS_URL)
+        ->assertOk()->assertJsonPath('data.0.primary_media', null);
+});
+
+it('exposes the primary media on single product responses', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->simple()->active()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+        'name' => 'Es Teh',
+    ]);
+    ProductMedia::factory()->forProduct($product)->primary()->create(['alt_text' => 'Foto utama']);
+    Sanctum::actingAs($owner);
+
+    $updated = $this->patchJson(PRODUCTS_URL.'/'.$product->id, ['name' => 'Es Teh Manis'])
+        ->assertOk()
+        ->assertJsonPath('data.primary_media.alt_text', 'Foto utama');
+
+    expect($updated->json('data.primary_media.url'))->toBeString()->not->toBeEmpty();
+
+    $this->postJson(PRODUCTS_URL.'/'.$product->id.'/deactivate')
+        ->assertOk()->assertJsonPath('data.primary_media.alt_text', 'Foto utama');
+});
+
+it('exposes the category summary and the card counts on the product list', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create(['name' => 'Makanan']);
+    $product = Product::factory()->variable()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+        'name' => 'Ice Cream',
+    ]);
+    ProductVariant::factory()->forProduct($product)->active()->create(['name' => 'Strawberry', 'price' => 25_000]);
+    ProductVariant::factory()->forProduct($product)->active()->create(['name' => 'Chocolate', 'price' => 15_000]);
+    ProductVariant::factory()->forProduct($product)->inactive()->create(['name' => 'Vanilla', 'price' => 5_000]);
+    ProductMedia::factory()->forProduct($product)->primary()->create();
+    ProductMedia::factory()->forProduct($product)->create();
+    ProductModifierGroup::factory()->forProduct($product)->active()->create();
+    ProductModifierGroup::factory()->forProduct($product)->inactive()->create();
+    Sanctum::actingAs($owner);
+
+    $this->getJson(PRODUCTS_URL)
+        ->assertOk()
+        ->assertJsonPath('data.0.category.id', $category->id)
+        ->assertJsonPath('data.0.category.name', 'Makanan')
+        ->assertJsonPath('data.0.category.status', 'active')
+        ->assertJsonPath('data.0.variants_count', 2)
+        ->assertJsonPath('data.0.min_price', '15000.00')
+        ->assertJsonPath('data.0.media_count', 2)
+        ->assertJsonPath('data.0.modifier_groups_count', 2);
+});
+
+it('counts only active variants and reports no minimum price without them', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->variable()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+    ]);
+    ProductVariant::factory()->forProduct($product)->inactive()->create(['price' => 5_000]);
+    Sanctum::actingAs($owner);
+
+    $this->getJson(PRODUCTS_URL)
+        ->assertOk()
+        ->assertJsonPath('data.0.variants_count', 0)
+        ->assertJsonPath('data.0.min_price', null)
+        ->assertJsonPath('data.0.media_count', 0)
+        ->assertJsonPath('data.0.modifier_groups_count', 0);
+});
+
+it('returns a null category on the product list once the category is soft deleted', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+    ]);
+    $category->delete();
+    Sanctum::actingAs($owner);
+
+    $this->getJson(PRODUCTS_URL)
+        ->assertOk()
+        ->assertJsonPath('data.0.category_id', $product->category_id)
+        ->assertJsonPath('data.0.category', null);
+});
+
+it('keeps the category but omits the card counts on single product responses', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create(['name' => 'Makanan']);
+    $product = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+        'name' => 'Es Teh',
+    ]);
+    ProductVariant::factory()->forProduct($product)->active()->create();
+    Sanctum::actingAs($owner);
+
+    $this->patchJson(PRODUCTS_URL.'/'.$product->id, ['name' => 'Es Teh Manis'])
+        ->assertOk()
+        ->assertJsonPath('data.category.name', 'Makanan')
+        ->assertJsonMissingPath('data.variants_count')
+        ->assertJsonMissingPath('data.min_price')
+        ->assertJsonMissingPath('data.media_count')
+        ->assertJsonMissingPath('data.modifier_groups_count');
+
+    $this->getJson(PRODUCTS_URL.'/'.$product->id)
+        ->assertOk()
+        ->assertJsonPath('data.category.name', 'Makanan')
+        ->assertJsonMissingPath('data.variants_count');
+});
+
 it('shows a product with its category, variants and media', function () {
     ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
     $category = CatalogCategory::factory()->forMerchant($merchant->id)->create(['name' => 'Makanan']);
