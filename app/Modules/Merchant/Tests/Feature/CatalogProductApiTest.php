@@ -471,6 +471,77 @@ it('shows a product with its category, variants and media', function () {
     expect($response->json('data.media.0.url'))->toBeString()->not->toBeEmpty();
 });
 
+it('summarises a simple product with a fixed price and detail counts', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->simple()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+        'price' => 12_500,
+    ]);
+    ProductMedia::factory()->forProduct($product)->primary()->create();
+    ProductMedia::factory()->forProduct($product)->create();
+    ProductModifierGroup::factory()->forProduct($product)->create();
+    $outlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    OutletProduct::factory()->forOutlet($outlet)->forProduct($product)->create();
+    Sanctum::actingAs($owner);
+
+    $response = $this->getJson(PRODUCTS_URL.'/'.$product->id)
+        ->assertOk()
+        ->assertJsonPath('data.summary.price.type', 'fixed')
+        ->assertJsonPath('data.summary.variants_count', 0)
+        ->assertJsonPath('data.summary.customization_groups_count', 1)
+        ->assertJsonPath('data.summary.media_count', 2)
+        ->assertJsonPath('data.summary.outlets_count', 1)
+        ->assertJsonCount(2, 'data.media')
+        ->assertJsonMissingPath('data.variants_count')
+        ->assertJsonMissingPath('data.min_price')
+        ->assertJsonMissingPath('data.media_count')
+        ->assertJsonMissingPath('data.modifier_groups_count');
+
+    expect((float) $response->json('data.summary.price.value'))->toBe(12500.0)
+        ->and($response->json('data.media.0.url'))->toBeString()->not->toBeEmpty();
+});
+
+it('summarises a variable product with the minimum active variant price', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->variable()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+    ]);
+    ProductVariant::factory()->forProduct($product)->active()->create(['price' => 25_000]);
+    ProductVariant::factory()->forProduct($product)->active()->create(['price' => 15_000]);
+    ProductVariant::factory()->forProduct($product)->inactive()->create(['price' => 5_000]);
+    Sanctum::actingAs($owner);
+
+    $response = $this->getJson(PRODUCTS_URL.'/'.$product->id)
+        ->assertOk()
+        ->assertJsonPath('data.summary.price.type', 'from')
+        ->assertJsonPath('data.summary.variants_count', 3)
+        ->assertJsonCount(3, 'data.variants');
+
+    expect((float) $response->json('data.summary.price.value'))->toBe(15000.0);
+});
+
+it('reports a null summary price when a variable product has no active variant', function () {
+    ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
+    $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();
+    $product = Product::factory()->variable()->create([
+        'merchant_id' => $merchant->id,
+        'category_id' => $category->id,
+    ]);
+    ProductVariant::factory()->forProduct($product)->inactive()->create(['price' => 5_000]);
+    Sanctum::actingAs($owner);
+
+    $this->getJson(PRODUCTS_URL.'/'.$product->id)
+        ->assertOk()
+        ->assertJsonPath('data.summary.price.type', 'from')
+        ->assertJsonPath('data.summary.price.value', null)
+        ->assertJsonPath('data.summary.variants_count', 1)
+        ->assertJsonPath('data.summary.outlets_count', 0);
+});
+
 it('reorders only the submitted products', function () {
     ['owner' => $owner, 'merchant' => $merchant] = catalogProductOwner();
     $category = CatalogCategory::factory()->forMerchant($merchant->id)->create();

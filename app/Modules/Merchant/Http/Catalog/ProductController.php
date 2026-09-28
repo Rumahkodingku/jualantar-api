@@ -69,7 +69,30 @@ class ProductController extends Controller
         );
     }
 
-    #[OpenApiResponse(200, 'Product detail', type: 'array{data: \App\Modules\Merchant\Http\Resources\ProductDetailResource}')]
+    #[OpenApiResponse(200, 'Product detail', type: 'array{data: array{
+        id: string,
+        category_id: string,
+        category: ?array<string, mixed>,
+        name: string,
+        description: ?string,
+        product_type: string,
+        price: ?string,
+        status: string,
+        display_order: int,
+        primary_media: ?array<string, mixed>,
+        summary: array{
+            price: array{type: string, value: ?float},
+            variants_count: int,
+            customization_groups_count: int,
+            media_count: int,
+            outlets_count: int
+        },
+        variants: array<int, mixed>,
+        media: array<int, mixed>,
+        modifier_groups: array<int, mixed>,
+        created_at: ?string,
+        updated_at: ?string
+    }}')]
     public function show(string $product): JsonResponse
     {
         return ApiResponse::fromResult(
@@ -82,6 +105,7 @@ class ProductController extends Controller
                     'modifierGroups' => fn ($relation) => $this->ordered($relation),
                     'modifierGroups.modifiers' => fn ($relation) => $this->ordered($relation),
                 ]);
+                $model->loadCount(['outletProducts as outlets_count']);
                 $this->mediaUrls->hydrate($model->media);
 
                 return ApiResponse::success(new ProductDetailResource($model));

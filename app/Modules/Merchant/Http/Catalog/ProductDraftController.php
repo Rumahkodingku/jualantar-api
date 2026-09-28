@@ -46,9 +46,9 @@ class ProductDraftController extends Controller
     {
         return ApiResponse::fromResult(
             $this->authorization->merchant(),
-            fn (Merchant $merchant) => ApiResponse::fromResult(
+            fn(Merchant $merchant) => ApiResponse::fromResult(
                 ($this->showDraft)($merchant),
-                fn (?ProductDraft $draft) => $draft === null
+                fn(?ProductDraft $draft) => $draft === null
                     ? ApiResponse::noContent()
                     : ApiResponse::success(new ProductDraftResource($draft)),
             ),
@@ -60,9 +60,9 @@ class ProductDraftController extends Controller
     {
         return ApiResponse::fromResult(
             $this->authorization->merchant(),
-            fn (Merchant $merchant) => ApiResponse::fromResult(
+            fn(Merchant $merchant) => ApiResponse::fromResult(
                 ($this->saveDraft)($merchant, $request->validated()),
-                fn (ProductDraft $draft) => ApiResponse::success(new ProductDraftResource($draft)),
+                fn(ProductDraft $draft) => ApiResponse::success(new ProductDraftResource($draft)),
             ),
         );
     }
@@ -72,9 +72,9 @@ class ProductDraftController extends Controller
     {
         return ApiResponse::fromResult(
             $this->authorization->merchant(),
-            fn (Merchant $merchant) => ApiResponse::fromResult(
+            fn(Merchant $merchant) => ApiResponse::fromResult(
                 ($this->deleteDraft)($merchant),
-                fn () => ApiResponse::noContent(),
+                fn() => ApiResponse::noContent(),
             ),
         );
     }
@@ -84,9 +84,9 @@ class ProductDraftController extends Controller
     {
         return ApiResponse::fromResult(
             $this->authorization->merchant(),
-            fn (Merchant $merchant) => ApiResponse::fromResult(
+            fn(Merchant $merchant) => ApiResponse::fromResult(
                 ($this->createUploadUrl)($merchant, $request->validated()),
-                fn (array $upload) => ApiResponse::success($upload),
+                fn(array $upload) => ApiResponse::success($upload),
             ),
         );
     }
@@ -96,9 +96,9 @@ class ProductDraftController extends Controller
     {
         return ApiResponse::fromResult(
             $this->authorization->merchant(),
-            fn (Merchant $merchant) => ApiResponse::fromResult(
+            fn(Merchant $merchant) => ApiResponse::fromResult(
                 ($this->deleteMedia)($merchant, $request->validated()['object_key']),
-                fn (ProductDraft $draft) => ApiResponse::success(new ProductDraftResource($draft)),
+                fn(ProductDraft $draft) => ApiResponse::success(new ProductDraftResource($draft)),
             ),
         );
     }
