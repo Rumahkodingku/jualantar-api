@@ -157,6 +157,7 @@ it('requires authentication for every catalog endpoint', function () {
     }
 
     $this->getJson(CATALOG_PREFIX.'/outlets/'.$f['outlet']->id.'/products')->assertStatus(401);
+    $this->getJson(CATALOG_PREFIX.'/outlets/'.$f['outlet']->id.'/products/'.$f['product']->id)->assertStatus(401);
     $this->putJson(CATALOG_PREFIX.'/outlets/'.$f['outlet']->id.'/products/order', ['items' => []])->assertStatus(401);
 });
 
@@ -250,7 +251,9 @@ it('restricts outlet-scoped actions to the assigned outlet and role', function (
     Sanctum::actingAs($manager['user']);
 
     $this->getJson(CATALOG_PREFIX.'/outlets/'.$ownOutlet.'/products')->assertOk();
+    $this->getJson(CATALOG_PREFIX.'/outlets/'.$ownOutlet.'/products/'.$productId)->assertOk();
     $this->getJson(CATALOG_PREFIX.'/outlets/'.$siblingOutlet.'/products')->assertStatus(403);
+    $this->getJson(CATALOG_PREFIX.'/outlets/'.$siblingOutlet.'/products/'.$productId)->assertStatus(403);
     $this->putJson(CATALOG_PREFIX.'/outlets/'.$ownOutlet.'/products/order', [
         'items' => [['product_id' => $productId, 'display_order' => 1]],
     ])->assertStatus(204);
@@ -265,6 +268,7 @@ it('restricts outlet-scoped actions to the assigned outlet and role', function (
     Sanctum::actingAs($staff['user']);
 
     $this->getJson(CATALOG_PREFIX.'/outlets/'.$ownOutlet.'/products')->assertOk();
+    $this->getJson(CATALOG_PREFIX.'/outlets/'.$ownOutlet.'/products/'.$productId)->assertOk();
     $this->postJson(CATALOG_PREFIX.'/products/'.$productId.'/outlets/'.$ownOutlet.'/availability', ['status' => 'available'])->assertOk();
     $this->postJson(CATALOG_PREFIX.'/products/'.$productId.'/outlets/'.$ownOutlet.'/deactivate')
         ->assertStatus(403)

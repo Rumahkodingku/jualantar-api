@@ -366,3 +366,113 @@ it('eager loads modifier groups to avoid an N+1 in the outlet catalog', function
 
     expect($withModifiers - $baseline)->toBeLessThanOrEqual(3);
 });
+
+function outletProductUrl(MerchantOutlet $outlet, Product $product): string
+{
+    return outletCatalogUrl($outlet).'/'.$product->id;
+}
+
+it('requires authentication for the outlet product detail', function () {
+    ['outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+    $product = sellableProduct($outlet, $category);
+
+    $this->getJson(outletProductUrl($outlet, $product))->assertStatus(401);
+});
+
+it('lets the owner, manager and staff read their outlet product detail', function () {
+    ['owner' => $owner, 'outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+    $product = sellableProduct($outlet, $category, ['name' => 'Es Teh']);
+
+    Sanctum::actingAs($owner);
+    $this->getJson(outletProductUrl($outlet, $product))
+        ->assertOk()
+        ->assertJsonPath('data.product.name', 'Es Teh')
+        ->assertJsonPath('data.assignment.status', 'active')
+        ->assertJsonPath('data.is_sellable', true);
+
+    foreach ([OutletUserRole::OutletManager, OutletUserRole::OutletStaff] as $role) {
+        $user = $this->plainUser();
+        MerchantOutletUser::factory()->forOutlet($outlet)->forUser($user->id)->create(['role' => $role]);
+        Sanctum::actingAs($user);
+
+        $this->getJson(outletProductUrl($outlet, $product))
+            ->assertOk()
+            ->assertJsonPath('data.product.name', 'Es Teh');
+    }
+});
+
+it('hides an outlet product detail that is not assigned to the target outlet', function () {
+    ['owner' => $owner, 'merchant' => $merchant, 'outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+    $otherOutlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    $product = sellableProduct($otherOutlet, $category);
+
+    Sanctum::actingAs($owner);
+
+    $this->getJson(outletProductUrl($outlet, $product))
+        ->assertStatus(404)
+        ->assertJsonPath('code', 'not_found');
+});
+
+it('hides an outlet product detail from another merchant', function () {
+    ['owner' => $owner, 'outlet' => $outlet] = outletCatalogFixture();
+
+    $foreignMerchant = Merchant::factory()->forUser($this->merchantUser()->id)->active()->create();
+    $foreignCategory = CatalogCategory::factory()->forMerchant($foreignMerchant->id)->create();
+    $foreignOutlet = MerchantOutlet::factory()->create(['merchant_id' => $foreignMerchant->id]);
+    $foreignProduct = sellableProduct($foreignOutlet, $foreignCategory);
+
+    Sanctum::actingAs($owner);
+
+    $this->getJson(outletProductUrl($outlet, $foreignProduct))
+        ->assertStatus(404)
+        ->assertJsonPath('code', 'not_found');
+});
+
+it('forbids an employee from another outlet on the product detail and hides a foreign outlet', function () {
+    ['merchant' => $merchant, 'outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+    $otherOutlet = MerchantOutlet::factory()->create(['merchant_id' => $merchant->id]);
+    $foreignOutlet = MerchantOutlet::factory()->create();
+    $product = sellableProduct($outlet, $category);
+
+    $user = $this->plainUser();
+    MerchantOutletUser::factory()->forOutlet($otherOutlet)->forUser($user->id)->manager()->create();
+    Sanctum::actingAs($user);
+
+    $this->getJson(outletProductUrl($outlet, $product))
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'outlet_scope_forbidden');
+
+    $this->getJson(outletProductUrl($foreignOutlet, $product))
+        ->assertStatus(404)
+        ->assertJsonPath('code', 'outlet_not_found');
+});
+
+it('requires a merchant context for the outlet product detail', function () {
+    ['outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+    $product = sellableProduct($outlet, $category);
+
+    Sanctum::actingAs($this->plainUser());
+
+    $this->getJson(outletProductUrl($outlet, $product))
+        ->assertStatus(403)
+        ->assertJsonPath('code', 'forbidden');
+});
+
+it('returns only the target outlet assignment and no master administration data', function () {
+    ['owner' => $owner, 'outlet' => $outlet, 'category' => $category] = outletCatalogFixture();
+    $otherOutlet = MerchantOutlet::factory()->create(['merchant_id' => $outlet->merchant_id]);
+    $product = sellableProduct($outlet, $category, [], [
+        'availability_status' => ProductAvailabilityStatus::Available,
+    ]);
+    OutletProduct::factory()->forOutlet($otherOutlet)->forProduct($product)
+        ->unavailable('Habis di outlet lain')->create();
+
+    Sanctum::actingAs($owner);
+
+    $response = $this->getJson(outletProductUrl($outlet, $product))->assertOk();
+
+    expect($response->json('data'))
+        ->not->toHaveKeys(['outlets_count', 'outlets', 'media', 'display_order'])
+        ->and($response->json('data.assignment.availability_status'))->toBe('available')
+        ->and($response->json('data.assignment.unavailable_reason'))->toBeNull();
+});

@@ -82,6 +82,7 @@ it('documents the merchant catalog endpoints', function () {
         '/v1/merchant/catalog/products/{product}/modifier-groups/{group}/modifiers/order',
         '/v1/merchant/catalog/products/{product}/modifier-groups/{group}/modifiers/{modifier}',
         '/v1/merchant/catalog/outlets/{outlet}/products',
+        '/v1/merchant/catalog/outlets/{outlet}/products/{product}',
         '/v1/merchant/catalog/outlets/{outlet}/products/order',
     ]);
 
@@ -96,6 +97,8 @@ it('documents the merchant catalog endpoints', function () {
         ->and($spec['paths']['/v1/merchant/catalog/categories']['post']['responses']['201']['content']['application/json']['schema']['properties']['data']['$ref'])
         ->toBe('#/components/schemas/CatalogCategoryResource')
         ->and($spec['paths']['/v1/merchant/catalog/outlets/{outlet}/products']['get']['responses']['403']['content']['application/problem+json']['schema']['$ref'])
+        ->toBe('#/components/schemas/ProblemDetails')
+        ->and($spec['paths']['/v1/merchant/catalog/outlets/{outlet}/products/{product}']['get']['responses']['403']['content']['application/problem+json']['schema']['$ref'])
         ->toBe('#/components/schemas/ProblemDetails');
 });
 

@@ -40,22 +40,7 @@ final class CatalogQueryService
                     ->whereNull('merchant.outlet_products.deleted_at');
             })
             ->join('merchant.catalog_categories', 'merchant.catalog_categories.id', '=', 'merchant.products.category_id')
-            ->with([
-                'category',
-                'variants',
-                'media',
-                'modifierGroups' => fn ($relation) => $relation
-                    ->where('status', CatalogStatus::Active->value)
-                    ->orderBy('display_order')
-                    ->orderBy('created_at')
-                    ->orderBy('id'),
-                'modifierGroups.modifiers' => fn ($relation) => $relation
-                    ->where('status', CatalogStatus::Active->value)
-                    ->orderBy('display_order')
-                    ->orderBy('created_at')
-                    ->orderBy('id'),
-                'outletProducts' => fn ($relation) => $relation->where('outlet_id', $outlet->id),
-            ]);
+            ->with($this->outletRelations($outlet->id));
 
         if (filled($search = $filters['search'] ?? null)) {
             $query->where('merchant.products.name', 'ilike', "%{$search}%");
@@ -82,6 +67,46 @@ final class CatalogQueryService
         }
 
         return $paginator;
+    }
+
+    /**
+     * The single outlet catalog row for a product that is assigned to the
+     * outlet. It reuses the exact relations of the list so the detail and the
+     * list stay the same shape, and only this outlet's assignment is loaded.
+     */
+    public function outletProductDetail(Product $product, string $outletId): Product
+    {
+        $product->load($this->outletRelations($outletId));
+        $this->mediaUrls->hydrate($product->media);
+
+        return $product;
+    }
+
+    /**
+     * Relations shared by the outlet catalog list and detail. The assignment
+     * relation is filtered to the target outlet so rows never carry another
+     * outlet's state.
+     *
+     * @return array<string, mixed>
+     */
+    private function outletRelations(string $outletId): array
+    {
+        return [
+            'category',
+            'variants',
+            'media',
+            'modifierGroups' => fn ($relation) => $relation
+                ->where('status', CatalogStatus::Active->value)
+                ->orderBy('display_order')
+                ->orderBy('created_at')
+                ->orderBy('id'),
+            'modifierGroups.modifiers' => fn ($relation) => $relation
+                ->where('status', CatalogStatus::Active->value)
+                ->orderBy('display_order')
+                ->orderBy('created_at')
+                ->orderBy('id'),
+            'outletProducts' => fn ($relation) => $relation->where('outlet_id', $outletId),
+        ];
     }
 
     /**

@@ -224,4 +224,25 @@ final class CatalogAuthorization
     {
         return $this->operations->authorizeOutletAction($outletId, $capability);
     }
+
+    /**
+     * Authorize an outlet-scoped read and return the product assigned to that
+     * outlet. Reuses the assignment contract so a foreign outlet stays a 404, a
+     * same-merchant outlet outside the assignment scope stays a 403, and a
+     * product without an assignment to the outlet stays a 404. The employee
+     * never reaches the owner-only master product detail through this path.
+     */
+    public function outletProduct(string $outletId, string $productId, string $capability): Result
+    {
+        $assignmentResult = $this->assignmentForOutletAction($outletId, $productId, $capability);
+
+        if ($assignmentResult->isErr()) {
+            return $assignmentResult;
+        }
+
+        /** @var OutletProduct $assignment */
+        $assignment = $assignmentResult->unwrap();
+
+        return Result::ok($assignment->product);
+    }
 }

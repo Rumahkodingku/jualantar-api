@@ -238,6 +238,8 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
 
             Route::get('/outlets/{outlet}/products', [OutletCatalogController::class, 'index'])
                 ->whereUuid('outlet')->name('outlets.products.index');
+            Route::get('/outlets/{outlet}/products/{product}', [OutletCatalogController::class, 'show'])
+                ->whereUuid('outlet')->whereUuid('product')->name('outlets.products.show');
             Route::put('/outlets/{outlet}/products/order', [OutletCatalogController::class, 'reorder'])
                 ->whereUuid('outlet')->name('outlets.products.order');
         });

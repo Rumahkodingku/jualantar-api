@@ -5,6 +5,7 @@ namespace App\Modules\Merchant\Http\Catalog;
 use App\Modules\Merchant\Application\Catalog\Services\CatalogAuthorization;
 use App\Modules\Merchant\Application\Catalog\Services\CatalogQueryService;
 use App\Modules\Merchant\Domain\Models\MerchantOutlet;
+use App\Modules\Merchant\Domain\Models\Product;
 use App\Modules\Merchant\Http\Catalog\Requests\IndexOutletCatalogRequest;
 use App\Modules\Merchant\Http\Catalog\Requests\ReorderOutletCatalogRequest;
 use App\Modules\Merchant\Http\Resources\OutletCatalogItemResource;
@@ -34,6 +35,17 @@ class OutletCatalogController extends Controller
             fn (MerchantOutlet $model) => ApiResponse::paginated(
                 $paginator = $this->query->outletCatalog($model, $request->validated()),
                 OutletCatalogItemResource::collection($paginator->items()),
+            ),
+        );
+    }
+
+    #[OpenApiResponse(200, 'Outlet product detail', type: 'array{data: '.self::RESOURCE.'}')]
+    public function show(string $outlet, string $product): JsonResponse
+    {
+        return ApiResponse::fromResult(
+            $this->authorization->outletProduct($outlet, $product, 'merchant.operations.catalog.view'),
+            fn (Product $model) => ApiResponse::success(
+                new OutletCatalogItemResource($this->query->outletProductDetail($model, $outlet)),
             ),
         );
     }
