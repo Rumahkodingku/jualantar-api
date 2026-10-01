@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
+ * A master customization group.
+ *
+ * `outlet_overrides` is present only on the master product detail, matching the
+ * variant and option resources.
+ *
  * @mixin ProductModifierGroup
  */
 class ProductModifierGroupResource extends JsonResource
@@ -29,6 +34,9 @@ class ProductModifierGroupResource extends JsonResource
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
             'modifiers' => ProductModifierResource::collection($this->whenLoaded('modifiers')),
+            'outlet_overrides' => OutletItemOverrideResource::collection(
+                $this->whenLoaded('outletStatusOverrides'),
+            ),
         ];
     }
 }

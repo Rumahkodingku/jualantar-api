@@ -3,6 +3,7 @@
 namespace App\Modules\Merchant\Application\Catalog\Actions;
 
 use App\Modules\Merchant\Application\Catalog\Concerns\ManagesModifierGroups;
+use App\Modules\Merchant\Domain\Models\OutletProductModifier;
 use App\Modules\Merchant\Domain\Models\ProductModifier;
 use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Shared\Result\Result;
@@ -16,6 +17,8 @@ final class DeleteModifier
      * Deleting an active modifier on an active group is refused when it would
      * leave the group unable to satisfy its min selection. On an inactive
      * group it is always allowed.
+     *
+     * The per-outlet overrides of the option are soft deleted with it.
      */
     public function __invoke(ProductModifierGroup $group, ProductModifier $modifier): Result
     {
@@ -25,6 +28,8 @@ final class DeleteModifier
             if ($error = $this->assertModifierRemovalKeepsGroupSatisfiable($locked, $modifier)) {
                 return $error;
             }
+
+            OutletProductModifier::query()->where('product_modifier_id', $modifier->id)->delete();
 
             $this->resetDefault($modifier);
             $modifier->delete();

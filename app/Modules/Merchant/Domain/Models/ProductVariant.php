@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Table('merchant.product_variants')]
@@ -36,6 +37,16 @@ class ProductVariant extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Every outlet that hides this variant, regardless of merchant.
+     *
+     * @return HasMany<OutletProductVariant, $this>
+     */
+    public function outletStatusOverrides(): HasMany
+    {
+        return $this->hasMany(OutletProductVariant::class, 'product_variant_id');
     }
 
     /**

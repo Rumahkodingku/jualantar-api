@@ -4,6 +4,8 @@ use App\Modules\Merchant\Http\Account\MerchantAccountController;
 use App\Modules\Merchant\Http\Approval\MerchantApprovalController;
 use App\Modules\Merchant\Http\Catalog\CategoryController;
 use App\Modules\Merchant\Http\Catalog\OutletCatalogController;
+use App\Modules\Merchant\Http\Catalog\OutletItemOverrideController;
+use App\Modules\Merchant\Http\Catalog\OutletItemOverrideResetController;
 use App\Modules\Merchant\Http\Catalog\ProductController;
 use App\Modules\Merchant\Http\Catalog\ProductDraftController;
 use App\Modules\Merchant\Http\Catalog\ProductMediaController;
@@ -219,6 +221,13 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
                 Route::post('/products/{product}/modifier-groups/{group}/modifiers/{modifier}/deactivate', [ProductModifierController::class, 'deactivate'])
                     ->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('products.modifier_groups.modifiers.deactivate');
 
+                Route::delete('/products/{product}/variants/{variant}/outlet-overrides', [OutletItemOverrideResetController::class, 'forVariant'])
+                    ->whereUuid('product')->whereUuid('variant')->name('products.variants.outlet_overrides.destroy');
+                Route::delete('/products/{product}/modifier-groups/{group}/outlet-overrides', [OutletItemOverrideResetController::class, 'forModifierGroup'])
+                    ->whereUuid('product')->whereUuid('group')->name('products.modifier_groups.outlet_overrides.destroy');
+                Route::delete('/products/{product}/modifier-groups/{group}/modifiers/{modifier}/outlet-overrides', [OutletItemOverrideResetController::class, 'forModifier'])
+                    ->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('products.modifier_groups.modifiers.outlet_overrides.destroy');
+
                 Route::get('/products/{product}/outlets', [ProductOutletController::class, 'index'])
                     ->whereUuid('product')->name('products.outlets.index');
                 Route::post('/products/{product}/outlets', [ProductOutletController::class, 'store'])
@@ -242,6 +251,22 @@ Route::middleware('api')->prefix('api/v1')->name('api.v1.')->group(function () {
                 ->whereUuid('outlet')->whereUuid('product')->name('outlets.products.show');
             Route::put('/outlets/{outlet}/products/order', [OutletCatalogController::class, 'reorder'])
                 ->whereUuid('outlet')->name('outlets.products.order');
+
+            // Per-outlet status overrides an outlet manager is allowed to write.
+            // "deactivate" hides an item at this outlet only; "reset" drops the
+            // override so it follows the master catalog again.
+            Route::post('/outlets/{outlet}/products/{product}/variants/{variant}/deactivate', [OutletItemOverrideController::class, 'deactivateVariant'])
+                ->whereUuid('outlet')->whereUuid('product')->whereUuid('variant')->name('outlets.products.variants.deactivate');
+            Route::post('/outlets/{outlet}/products/{product}/variants/{variant}/reset', [OutletItemOverrideController::class, 'resetVariant'])
+                ->whereUuid('outlet')->whereUuid('product')->whereUuid('variant')->name('outlets.products.variants.reset');
+            Route::post('/outlets/{outlet}/products/{product}/modifier-groups/{group}/deactivate', [OutletItemOverrideController::class, 'deactivateModifierGroup'])
+                ->whereUuid('outlet')->whereUuid('product')->whereUuid('group')->name('outlets.products.modifier_groups.deactivate');
+            Route::post('/outlets/{outlet}/products/{product}/modifier-groups/{group}/reset', [OutletItemOverrideController::class, 'resetModifierGroup'])
+                ->whereUuid('outlet')->whereUuid('product')->whereUuid('group')->name('outlets.products.modifier_groups.reset');
+            Route::post('/outlets/{outlet}/products/{product}/modifier-groups/{group}/modifiers/{modifier}/deactivate', [OutletItemOverrideController::class, 'deactivateModifier'])
+                ->whereUuid('outlet')->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('outlets.products.modifier_groups.modifiers.deactivate');
+            Route::post('/outlets/{outlet}/products/{product}/modifier-groups/{group}/modifiers/{modifier}/reset', [OutletItemOverrideController::class, 'resetModifier'])
+                ->whereUuid('outlet')->whereUuid('product')->whereUuid('group')->whereUuid('modifier')->name('outlets.products.modifier_groups.modifiers.reset');
         });
 
     Route::middleware(['auth:sanctum'])->prefix('admin/merchant-approvals')->name('admin.merchant_approvals.')->group(function () {

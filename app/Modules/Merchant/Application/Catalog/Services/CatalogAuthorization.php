@@ -14,6 +14,7 @@ use App\Modules\Merchant\Domain\Models\ProductModifier;
 use App\Modules\Merchant\Domain\Models\ProductModifierGroup;
 use App\Modules\Merchant\Domain\Models\ProductVariant;
 use App\Shared\Result\Result;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Resolves catalog resources inside the authenticated merchant scope.
@@ -244,5 +245,134 @@ final class CatalogAuthorization
         $assignment = $assignmentResult->unwrap();
 
         return Result::ok($assignment->product);
+    }
+
+    /**
+     * Authorize an outlet-scoped status override and return the assignment
+     * together with the one variant of that product.
+     *
+     * The variant is resolved inside the outlet's own merchant, so a UUID from
+     * another merchant, or one belonging to a different product of the same
+     * merchant, is a 404 rather than a leak.
+     *
+     * @return Result<array{0: OutletProduct, 1: ProductVariant}>
+     */
+    public function outletVariant(
+        string $outletId,
+        string $productId,
+        string $variantId,
+        string $capability,
+    ): Result {
+        return $this->withOutletItem(
+            $outletId,
+            $productId,
+            $capability,
+            fn (Product $product): mixed => $this->variant($product, $variantId),
+            ProductVariant::class,
+        );
+    }
+
+    /**
+     * Authorize an outlet-scoped status override on one modifier group.
+     *
+     * @return Result<array{0: OutletProduct, 1: ProductModifierGroup}>
+     */
+    public function outletModifierGroup(
+        string $outletId,
+        string $productId,
+        string $groupId,
+        string $capability,
+    ): Result {
+        return $this->withOutletItem(
+            $outletId,
+            $productId,
+            $capability,
+            fn (Product $product): mixed => $this->modifierGroup($product, $groupId),
+            ProductModifierGroup::class,
+        );
+    }
+
+    /**
+     * Authorize an outlet-scoped status override on one modifier option, nested
+     * under its group so a group from another product is a 404 as well.
+     *
+     * @return Result<array{0: OutletProduct, 1: ProductModifierGroup, 2: ProductModifier}>
+     */
+    public function outletModifier(
+        string $outletId,
+        string $productId,
+        string $groupId,
+        string $modifierId,
+        string $capability,
+    ): Result {
+        $assignmentResult = $this->assignmentForOutletAction($outletId, $productId, $capability);
+
+        if ($assignmentResult->isErr()) {
+            return $assignmentResult;
+        }
+
+        /** @var OutletProduct $assignment */
+        $assignment = $assignmentResult->unwrap();
+
+        $groupResult = $this->modifierGroup($assignment->product, $groupId);
+
+        if ($groupResult->isErr()) {
+            return $groupResult;
+        }
+
+        /** @var ProductModifierGroup $group */
+        $group = $groupResult->unwrap();
+
+        $modifierResult = $this->modifier($group, $modifierId);
+
+        if ($modifierResult->isErr()) {
+            return $modifierResult;
+        }
+
+        /** @var ProductModifier $modifier */
+        $modifier = $modifierResult->unwrap();
+
+        return Result::ok([$assignment, $group, $modifier]);
+    }
+
+    /**
+     * Authorize the assignment, then resolve one of the product's own items
+     * with an owner-scoped lookup reused from the same service.
+     *
+     * @template TItem of Model
+     *
+     * @param  callable(Product): Result  $resolve
+     * @param  class-string<TItem>  $expected
+     * @return Result<array{0: OutletProduct, 1: TItem}>
+     */
+    private function withOutletItem(
+        string $outletId,
+        string $productId,
+        string $capability,
+        callable $resolve,
+        string $expected,
+    ): Result {
+        $assignmentResult = $this->assignmentForOutletAction($outletId, $productId, $capability);
+
+        if ($assignmentResult->isErr()) {
+            return $assignmentResult;
+        }
+
+        /** @var OutletProduct $assignment */
+        $assignment = $assignmentResult->unwrap();
+
+        $itemResult = $resolve($assignment->product);
+
+        if ($itemResult->isErr()) {
+            return $itemResult;
+        }
+
+        $item = $itemResult->unwrap();
+
+        if (! $item instanceof $expected) {
+            return $this->catalogNotFound('The requested catalog item was not found.');
+        }
+
+        return Result::ok([$assignment, $item]);
     }
 }

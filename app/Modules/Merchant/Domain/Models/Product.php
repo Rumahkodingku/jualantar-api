@@ -80,6 +80,32 @@ class Product extends Model
         return $this->hasMany(OutletProduct::class);
     }
 
+    /**
+     * Every per-outlet variant restriction of this product, across outlets.
+     *
+     * @return HasMany<OutletProductVariant, $this>
+     */
+    public function outletVariantOverrides(): HasMany
+    {
+        return $this->hasMany(OutletProductVariant::class, 'product_id');
+    }
+
+    /**
+     * @return HasMany<OutletProductModifierGroup, $this>
+     */
+    public function outletModifierGroupOverrides(): HasMany
+    {
+        return $this->hasMany(OutletProductModifierGroup::class, 'product_id');
+    }
+
+    /**
+     * @return HasMany<OutletProductModifier, $this>
+     */
+    public function outletModifierOverrides(): HasMany
+    {
+        return $this->hasMany(OutletProductModifier::class, 'product_id');
+    }
+
     public function isVariable(): bool
     {
         return $this->product_type === ProductType::Variable;

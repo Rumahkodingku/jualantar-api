@@ -9,6 +9,7 @@ use App\Modules\Merchant\Application\Catalog\Actions\DeleteProduct;
 use App\Modules\Merchant\Application\Catalog\Actions\ReorderProducts;
 use App\Modules\Merchant\Application\Catalog\Actions\UpdateProduct;
 use App\Modules\Merchant\Application\Catalog\Services\CatalogAuthorization;
+use App\Modules\Merchant\Application\Catalog\Services\CatalogQueryService;
 use App\Modules\Merchant\Application\Catalog\Services\MediaUrlHydrator;
 use App\Modules\Merchant\Domain\Enums\CatalogStatus;
 use App\Modules\Merchant\Domain\Models\Merchant;
@@ -42,6 +43,7 @@ class ProductController extends Controller
         private readonly DeactivateProduct $deactivateProduct,
         private readonly ReorderProducts $reorderProducts,
         private readonly MediaUrlHydrator $mediaUrls,
+        private readonly CatalogQueryService $query,
     ) {}
 
     #[OpenApiResponse(200, 'Products', type: self::PAGINATED)]
@@ -105,6 +107,9 @@ class ProductController extends Controller
                     'modifierGroups' => fn ($relation) => $this->ordered($relation),
                     'modifierGroups.modifiers' => fn ($relation) => $this->ordered($relation),
                 ]);
+                // The owner needs the reverse map of the per-outlet overrides:
+                // which outlets hid each variant, group or option.
+                $this->query->loadOutletOverrideViews($model);
                 $model->loadCount(['outletProducts as outlets_count']);
                 $this->mediaUrls->hydrate($model->media);
 

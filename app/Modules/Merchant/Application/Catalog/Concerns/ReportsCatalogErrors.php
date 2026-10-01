@@ -152,4 +152,44 @@ trait ReportsCatalogErrors
             title: 'Conflict',
         ));
     }
+
+    private function outletItemMasterInactive(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'outlet_item_master_inactive',
+            message: 'This item is already inactive in the master catalog, so it cannot be changed at an outlet.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
+
+    private function outletLastSellableVariant(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'outlet_last_sellable_variant',
+            message: 'This is the only variant still sellable at this outlet. Disable another variant, or use the outlet assignment status instead.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
+
+    private function outletModifierRequiredByActiveGroup(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'outlet_modifier_required_by_active_group',
+            message: 'An active customization group at this outlet must keep enough active options to be selectable.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
+
+    private function outletModifierGroupUnsatisfiable(): Result
+    {
+        return Result::err(new ResultError(
+            code: 'outlet_modifier_group_unsatisfiable',
+            message: 'This customization group cannot follow the master catalog at this outlet because too few of its options are active here.',
+            status: 409,
+            title: 'Conflict',
+        ));
+    }
 }

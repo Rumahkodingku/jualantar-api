@@ -59,6 +59,16 @@ class ProductModifierGroup extends Model
     }
 
     /**
+     * Every outlet that hides this group, regardless of merchant.
+     *
+     * @return HasMany<OutletProductModifierGroup, $this>
+     */
+    public function outletStatusOverrides(): HasMany
+    {
+        return $this->hasMany(OutletProductModifierGroup::class, 'product_modifier_group_id');
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array

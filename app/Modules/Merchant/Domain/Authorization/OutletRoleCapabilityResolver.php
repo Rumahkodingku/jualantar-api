@@ -40,6 +40,8 @@ final class OutletRoleCapabilityResolver
                 'merchant.operations.catalog.availability.update',
                 'merchant.operations.catalog.assignment.status.update',
                 'merchant.operations.catalog.order.update',
+                'merchant.operations.catalog.variant.status.update',
+                'merchant.operations.catalog.customization.status.update',
             ],
             OutletUserRole::OutletStaff => [
                 'merchant.operations.view',

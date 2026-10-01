@@ -24,6 +24,8 @@ it('resolves the full capability list for an outlet manager', function () {
         'merchant.operations.catalog.availability.update',
         'merchant.operations.catalog.assignment.status.update',
         'merchant.operations.catalog.order.update',
+        'merchant.operations.catalog.variant.status.update',
+        'merchant.operations.catalog.customization.status.update',
     ]);
 });
 
@@ -60,4 +62,13 @@ it('grants every staff capability to a manager as well', function () {
     foreach ($staffCapabilities as $capability) {
         expect($resolver->allows(OutletUserRole::OutletManager, $capability))->toBeTrue();
     }
+});
+
+it('never lets outlet staff change a variant or customization status', function () {
+    $resolver = new OutletRoleCapabilityResolver;
+
+    expect($resolver->allows(OutletUserRole::OutletManager, 'merchant.operations.catalog.variant.status.update'))->toBeTrue()
+        ->and($resolver->allows(OutletUserRole::OutletManager, 'merchant.operations.catalog.customization.status.update'))->toBeTrue()
+        ->and($resolver->allows(OutletUserRole::OutletStaff, 'merchant.operations.catalog.variant.status.update'))->toBeFalse()
+        ->and($resolver->allows(OutletUserRole::OutletStaff, 'merchant.operations.catalog.customization.status.update'))->toBeFalse();
 });
